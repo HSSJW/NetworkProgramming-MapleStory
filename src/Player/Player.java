@@ -5,61 +5,38 @@ import Map.MapData;
 import javax.swing.*;
 import java.awt.*;
 
-public class Player {
-    private int id; // 플레이어 ID (1 또는 2)
-    private int x, y; // 플레이어 위치
-    private int width, height; // 플레이어 크기
-    private int verticalSpeed = 0; // 수직 속도
-    private final int GRAVITY = 2; // 중력
-    private final int JUMP_STRENGTH = -20; // 점프 힘
-    private boolean onGround = false; // 바닥 여부
-    private boolean facingRight = true; // 방향 (true: 오른쪽, false: 왼쪽)
-    private boolean moving = false; // 이동 중 여부
-    private String currentState = "idle"; // 현재 상태 ("idle", "left", "right", "jump", "hit")
+public abstract class Player {
+    protected int id; // 플레이어 ID
+    protected int x, y; // 위치
+    protected int width, height; // 크기
+    protected int verticalSpeed = 0; // 수직 속도
+    protected final int GRAVITY = 2; // 중력
+    protected final int JUMP_STRENGTH = -20; // 점프 힘
+    protected boolean onGround = false; // 바닥 여부
+    protected boolean facingRight = true; // 방향
+    protected boolean moving = false; // 이동 여부
+    protected String currentState = "idle"; // 현재 상태
 
-    // 상태별 이미지
-    private Image standRightImage, standLeftImage;
-    private Image leftImage, rightImage;
-    private Image jumpRightImage, jumpLeftImage;
-    private Image hitRightImage, hitLeftImage;
-    private Image currentImage; // 현재 상태의 이미지
+    protected Image standRightImage, standLeftImage;
+    protected Image leftImage, rightImage;
+    protected Image jumpRightImage, jumpLeftImage;
+    protected Image hitRightImage, hitLeftImage;
+    protected Image currentImage; // 현재 상태의 이미지
 
-    public Player(int playerId, int startX, int startY) {
-        // 사용자 id에 맞게 플레이어 이미지 부여
-        if (playerId == 1) {
-            standRightImage = new ImageIcon("images/player/player_stand_right.png").getImage();
-            standLeftImage = new ImageIcon("images/player/player_stand_left.png").getImage();
-            leftImage = new ImageIcon("images/player/player_walk_left.gif").getImage();
-            rightImage = new ImageIcon("images/player/player_walk_right.gif").getImage();
-            jumpRightImage = new ImageIcon("images/player/player_jump_right.png").getImage();
-            jumpLeftImage = new ImageIcon("images/player/player_jump_left.png").getImage();
-            hitRightImage = new ImageIcon("images/player/player_hit_right.png").getImage();
-            hitLeftImage = new ImageIcon("images/player/player_hit_left.png").getImage();
-        } else {
-            standRightImage = new ImageIcon("images/player/player_stand_right.png").getImage();
-            standLeftImage = new ImageIcon("images/player/player_stand_left.png").getImage();
-            leftImage = new ImageIcon("images/player/player_walk_left.gif").getImage();
-            rightImage = new ImageIcon("images/player/player_walk_right.gif").getImage();
-            jumpRightImage = new ImageIcon("images/player/player_jump_right.png").getImage();
-            jumpLeftImage = new ImageIcon("images/player/player_jump_left.png").getImage();
-            hitRightImage = new ImageIcon("images/player/player_hit_right.png").getImage();
-            hitLeftImage = new ImageIcon("images/player/player_hit_left.png").getImage();
-
-        }
-
-        // 기본 이미지를 오른쪽 서 있는 이미지로 설정
-        currentImage = standRightImage;
-
-        if (playerId != 1 && playerId != 2) {
-            throw new IllegalArgumentException("Invalid playerId. Must be 1 or 2.");
-        }
-        this.id = playerId;
+    public Player(int id, int startX, int startY) {
+        this.id = id;
         this.x = startX;
         this.y = startY;
+
+        initializeImages(); // 각 플레이어별 이미지 초기화
+
+        this.currentImage = standRightImage;
         this.width = currentImage.getWidth(null);
         this.height = currentImage.getHeight(null);
     }
 
+    // 각 플레이어별 이미지를 초기화하는 추상 메서드
+    protected abstract void initializeImages();
     // 플레이어 그리기
     public void draw(Graphics g, Component observer) {
         g.drawImage(currentImage, x, y, width, height, observer);
@@ -102,8 +79,8 @@ public class Player {
 
     public void stopMoving() {
 //        if (onGround && !moving && !currentState.equals("jump")) { // 점프 중이 아니면 idle 상태로 전환
-            currentState = "idle";
-            currentImage = facingRight ? standRightImage : standLeftImage; // 방향에 따른 서 있는 이미지
+        currentState = "idle";
+        currentImage = facingRight ? standRightImage : standLeftImage; // 방향에 따른 서 있는 이미지
 //        }
     }
 

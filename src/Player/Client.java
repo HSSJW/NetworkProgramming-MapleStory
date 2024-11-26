@@ -77,8 +77,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         else
             player2Id = 1;
 
-        player1 = new Player(playerID, playerStartX, playerStartY); // Player 초기화
-        player2 = new Player(player2Id, playerStartX + 100, playerStartY); // Player2 초기화
+        player1 = new Player1(playerStartX, playerStartY); // Player 초기화
+        player2 = new Player2(playerStartX + 100, playerStartY); // Player2 초기화
 
         // 상태바 및 버튼 이미지 로드
         stateBarImage = new ImageIcon("images/ui/statebar.png").getImage();
