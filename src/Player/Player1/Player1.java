@@ -1,4 +1,6 @@
-package Player;
+package Player.Player1;
+
+import Player.Player;
 
 import javax.swing.*;
 

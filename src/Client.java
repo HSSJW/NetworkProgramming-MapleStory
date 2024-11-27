@@ -1,7 +1,6 @@
-package Player;
-
 import Map.MapData;
 import Map.Portal;
+import Player.Player;
 import Player.Player1.Player1;
 import Player.Player2.Player2;
 
@@ -12,6 +11,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,7 +34,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private Image shopButtonImage;
 
     //맵관련
-    private CopyOnWriteArrayList<MapData> maps = MapleServer.Copy;
+    private CopyOnWriteArrayList<MapData> maps = MapData.getMaps();
     private int currentMapIndex = 0;
     private int opponentMapIndex = -1;
 
@@ -260,6 +260,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 사용하지 않음
     }
 
+    //플레이어가 포탈위에 있는지 판단하는 메서드
     private boolean isOnPortal(Player player) {
         for (Portal portal : getCurrentMap().getPortals()) {
             if (player.getX() + player.getWidth() > portal.getX() &&
