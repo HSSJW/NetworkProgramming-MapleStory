@@ -234,8 +234,12 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player1.jump();
         }
 
-        if (pressedKeys.contains(KeyEvent.VK_UP) && isOnPortal(player1)) {
-            nextMap(); // 포탈 위에서 위쪽 방향키 누르면 다음 맵으로 이동
+        // 포탈 위에 있는 경우 맵 전환
+        if (pressedKeys.contains(KeyEvent.VK_UP)) {
+            Portal portal = getPortalOnPlayer(player1); // 플레이어와 충돌한 포탈 가져오기
+            if (portal != null) {
+                nextMap(portal); // 포탈을 통해 맵 전환
+            }
         }
 
         // 현재 맵 객체를 그대로 전달
@@ -244,6 +248,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         sendPosition();
         repaint();
     }
+
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -261,27 +266,38 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     }
 
     //플레이어가 포탈위에 있는지 판단하는 메서드
-    private boolean isOnPortal(Player player) {
-        for (Portal portal : getCurrentMap().getPortals()) {
-            if (player.getX() + player.getWidth() > portal.getX() &&
-                    player.getX() < portal.getX() + portal.getWidth() &&
-                    player.getY() + player.getHeight() > portal.getY() &&
-                    player.getY() < portal.getY() + portal.getHeight()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void nextMap() {
-        currentMapIndex = (currentMapIndex + 1) % maps.size();
+    // 포탈을 통해 다음 맵으로 이동
+    private void nextMap(Portal portal) {
+        currentMapIndex = portal.getNextMapIndex(); // 포탈에 설정된 다음 맵 인덱스 가져오기
         MapData currentMap = getCurrentMap();
+
+        // 배경 이미지 업데이트
         backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
-        player1.setPosition(100, 300);
+
+        // 플레이어 위치 초기화
+        player1.setPosition(portal.getSpawnX(), portal.getSpawnY()); // 새 맵의 시작 위치 (임의로 지정)
+
+        // 상대방도 같은 맵으로 업데이트
         opponentMapIndex = currentMapIndex;
+
+        // 포지션 정보 전송 및 화면 갱신
         sendPosition();
         repaint();
     }
+
+
+    // 플레이어와 충돌한 포탈 반환 (없으면 null)
+    private Portal getPortalOnPlayer(Player player) {
+        for (Portal portal : getCurrentMap().getPortals()) {
+            Rectangle playerBounds = new Rectangle(player.getX(), player.getY(), player.getWidth(), player.getHeight());
+            if (playerBounds.intersects(portal.getBounds())) {
+                return portal; // 충돌한 포탈 반환
+            }
+        }
+        return null; // 충돌한 포탈이 없으면 null 반환
+    }
+
+
 
     private MapData getCurrentMap() {
         return maps.get(currentMapIndex);

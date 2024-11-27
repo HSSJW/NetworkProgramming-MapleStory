@@ -41,7 +41,7 @@ public class MapData {
 
         // 첫 번째 맵의 포탈 데이터
         CopyOnWriteArrayList<Portal> map1Portals = new CopyOnWriteArrayList<>();
-        map1Portals.add(new Portal(1000, 480)); // 포탈 위치
+        map1Portals.add(new Portal(1000, 480, 1, 700, 400)); // 포탈 위치
 
         maps.add(new MapData("images/map/east_road.png", map1Terrain, map1Portals));
 
@@ -52,7 +52,7 @@ public class MapData {
 
         // 두 번째 맵의 포탈 데이터
         CopyOnWriteArrayList<Portal> map2Portals = new CopyOnWriteArrayList<>();
-        map2Portals.add(new Portal(700, 400)); // 포탈 위치
+        map2Portals.add(new Portal(700, 400, 1, 700, 400)); // 포탈 위치
 
         maps.add(new MapData("images/map/lis.gif", map2Terrain, map2Portals));
 
