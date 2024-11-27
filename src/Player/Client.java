@@ -194,22 +194,25 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player2.draw(g, this);
         }
 
-        // 상태바 그리기
+        // 상태바 그리기 - 가로 길이를 창 크기에 맞추기
+        int stateBarWidth = panelWidth; // 창 크기에 맞춘 가로 길이
+        int stateBarHeight = stateBarImage.getHeight(null);
         int stateBarX = 0;
-        int stateBarY = getHeight() - stateBarImage.getHeight(null);
-        g.drawImage(stateBarImage, stateBarX, stateBarY, mapWidth, stateBarImage.getHeight(null), this);
+        int stateBarY = panelHeight - stateBarHeight;
+        g.drawImage(stateBarImage, stateBarX, stateBarY, stateBarWidth, stateBarHeight, this);
 
         // 버튼 그리기
         int buttonSpacing = 10;
         int buttonWidth = tradeButtonImage.getWidth(null);
         int buttonHeight = tradeButtonImage.getHeight(null);
-        int buttonStartX = stateBarX + stateBarImage.getWidth(null) - (buttonWidth * 3 + buttonSpacing * 2);
-        int buttonY = stateBarY + (stateBarImage.getHeight(null) - buttonHeight) / 2;
+        int buttonStartX = stateBarX + stateBarWidth - (buttonWidth * 3 + buttonSpacing * 2);
+        int buttonY = stateBarY + (stateBarHeight - buttonHeight) / 2;
 
         g.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
         g.drawImage(shortcutButtonImage, buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
         g.drawImage(shopButtonImage, buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
     }
+
 
 
 
@@ -287,7 +290,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 첫 번째 맵의 지형 데이터
         CopyOnWriteArrayList<Rectangle> map1Terrain = new CopyOnWriteArrayList<>();
-        map1Terrain.add(new Rectangle(0, 650, 800, 100)); // 바닥
+        map1Terrain.add(new Rectangle(0, 650, 1400, 100)); // 바닥
         map1Terrain.add(new Rectangle(300, 400, 200, 20)); // 플랫폼 1
 
         // 계단 형태 추가
