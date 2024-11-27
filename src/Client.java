@@ -2,6 +2,9 @@ package Player;
 
 import Map.MapData;
 import Map.Portal;
+import Player.Player1.Player1;
+import Player.Player2.Player2;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,8 +33,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private Image shortcutButtonImage;
     private Image shopButtonImage;
 
-    // 맵 관련
-    private CopyOnWriteArrayList<MapData> maps;
+    //맵관련
+    private CopyOnWriteArrayList<MapData> maps = MapleServer.Copy;
     private int currentMapIndex = 0;
     private int opponentMapIndex = -1;
 
@@ -44,8 +47,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     public Client(int playerID, String host, int port) throws IOException {
         this.playerID = playerID;
 
-        // 맵 생성
-        initializeMaps();
+
 
         // 첫 번째 맵 설정
         MapData currentMap = getCurrentMap();
@@ -284,38 +286,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         return maps.get(currentMapIndex);
     }
 
-    //맵 초기화 메소드
-    private void initializeMaps() {
-        maps = new CopyOnWriteArrayList<>();
 
-        // 첫 번째 맵의 지형 데이터
-        CopyOnWriteArrayList<Rectangle> map1Terrain = new CopyOnWriteArrayList<>();
-        map1Terrain.add(new Rectangle(0, 650, 1400, 100)); // 바닥
-        map1Terrain.add(new Rectangle(300, 400, 200, 20)); // 플랫폼 1
-
-        // 계단 형태 추가
-        map1Terrain.add(new Rectangle(100, 600, 50, 50));  // 첫 번째 계단
-        map1Terrain.add(new Rectangle(150, 550, 50, 50)); // 두 번째 계단
-        map1Terrain.add(new Rectangle(200, 500, 50, 50)); // 세 번째 계단
-        map1Terrain.add(new Rectangle(250, 450, 50, 50)); // 네 번째 계단
-
-        // 첫 번째 맵의 포탈 데이터
-        CopyOnWriteArrayList<Portal> map1Portals = new CopyOnWriteArrayList<>();
-        map1Portals.add(new Portal(1000, 480)); // 포탈 위치
-
-        maps.add(new MapData("images/map/east_road.png", map1Terrain, map1Portals));
-
-        // 두 번째 맵의 지형 데이터
-        CopyOnWriteArrayList<Rectangle> map2Terrain = new CopyOnWriteArrayList<>();
-        map2Terrain.add(new Rectangle(0, 500, 800, 100)); // 바닥
-        map2Terrain.add(new Rectangle(250, 350, 150, 20)); // 플랫폼 2
-
-        // 두 번째 맵의 포탈 데이터
-        CopyOnWriteArrayList<Portal> map2Portals = new CopyOnWriteArrayList<>();
-        map2Portals.add(new Portal(700, 400)); // 포탈 위치
-
-        maps.add(new MapData("images/map/lis.gif", map2Terrain, map2Portals));
-    }
 
 
     public static void main(String[] args) {
@@ -324,8 +295,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             JFrame frame = new JFrame("2-Player Game");
             Client gamePanel = new Client(playerID, "localhost", 5000);
 
-            int mapWidth = gamePanel.mapWidth;
-            int mapHeight = gamePanel.mapHeight;
+//            int mapWidth = gamePanel.mapWidth;
+//            int mapHeight = gamePanel.mapHeight;
+
+            int mapWidth = 1000;
+            int mapHeight = 500;
 
             frame.add(gamePanel);
             frame.pack();
