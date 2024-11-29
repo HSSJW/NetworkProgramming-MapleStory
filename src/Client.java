@@ -151,6 +151,13 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         int panelWidth = getWidth();
         int panelHeight = getHeight();
 
+        // 현재 맵 데이터 가져오기
+        MapData currentMap = getCurrentMap();
+
+        // **배경 색상 채우기**
+        g.setColor(currentMap.getBackgroundColor());
+        g.fillRect(0, 0, panelWidth, panelHeight);
+
         // 배경 이미지 원본 크기 가져오기
         int bgWidth = backgroundImage.getWidth(null);
         int bgHeight = backgroundImage.getHeight(null);
@@ -171,19 +178,18 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             newBgHeight = (int) (bgHeight * ((double) panelWidth / bgWidth));
         }
 
-        // 배경 이미지를 중앙에 맞추어 그리기
+        // 배경 이미지를 중앙에 맞추어 그리기 (맵의 Y 오프셋 적용)
         int x = (panelWidth - newBgWidth) / 2;
-        int y = (panelHeight - newBgHeight) / 2 + 130;
+        int y = (panelHeight - newBgHeight) / 2 + currentMap.getBackgroundYOffset();
         g.drawImage(backgroundImage, x, y, newBgWidth, newBgHeight, this);
 
-        // 현재 맵 데이터 가져오기
-        MapData currentMap = getCurrentMap();
+
 
         // 지형 그리기
-        g.setColor(Color.GREEN);
-        for (Rectangle rect : currentMap.getTerrain()) {
-            g.fillRect(rect.x, rect.y, rect.width, rect.height);
-        }
+//        g.setColor(Color.GREEN);
+//        for (Rectangle rect : currentMap.getTerrain()) {
+//            g.fillRect(rect.x, rect.y, rect.width, rect.height);
+//        }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {
