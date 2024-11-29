@@ -131,14 +131,15 @@ public abstract class Player {
             }
         }
 
+
         // 착지 시 idle 상태로 전환
         if (onGround && !wasOnGround && !moving) {
             stopMoving();
         }
 
         // 맵 경계 내로 제한
-        x = Math.max(0, Math.min(mapWidth - width, x));
-        y = Math.min(mapHeight - height, y);
+        x = Math.max(50, Math.min(mapWidth - width + 100, x)); //플레이어의 x축 이동을 제한(맵 안에서만 이동 가능하도록)
+        y = Math.min(mapHeight - height + 100, y); //플레이어의 y축 이동을 제한
 
         // 이동 상태가 없으면 idle로 복구
         if (!moving && onGround) {

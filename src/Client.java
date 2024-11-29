@@ -227,7 +227,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     //키입력, 화면그리기
     @Override
     public void actionPerformed(ActionEvent e) {
-        int speed = 5;
+        int speed = 4;
 
         // 키 상태에 따라 동작 수행
         if (pressedKeys.contains(KeyEvent.VK_LEFT)) {

@@ -45,17 +45,22 @@ public class MapData {
 
         // 첫 번째 맵
         maps.add(new MapData(
-                "images/map/east_road.png",          // 배경 이미지
+                "images/map/east_road-Photoroom.png",          // 배경 이미지
                 new Color(135, 206, 250),           // 하늘색 배경
                 130,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
                         java.util.List.of(
-                                new Rectangle(0, 610, 1400, 100),
-                                new Rectangle(300, 400, 200, 20),
-                                new Rectangle(100, 600, 50, 50),
-                                new Rectangle(150, 550, 50, 50),
-                                new Rectangle(200, 500, 50, 50),
-                                new Rectangle(250, 450, 50, 50)
+                                new Rectangle(50, 610, 435, 20),//1-1
+                                new Rectangle(485, 640, 130, 20),//1-2
+                                new Rectangle(615, 610, 352, 20),//1-3
+                                new Rectangle(962, 640, 130, 20),//1-4
+                                new Rectangle(1097, 610, 305, 20),//1-5
+                                new Rectangle(380, 550, 50, 20), //2-1
+                                new Rectangle(1080, 520, 70, 20),//2-2
+                                new Rectangle(430, 480, 650, 20),//3층 가로바닥
+                                new Rectangle(1110, 450, 90, 20), //4층 공중계단
+                                new Rectangle(1010, 415, 90, 20), //공중계단 2
+                                new Rectangle(860, 380, 130, 20) // 공중계단 3
                         )
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
