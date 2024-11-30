@@ -74,7 +74,7 @@ public class MapData {
         maps.add(new MapData(
                 "images/map/lis.gif",               // 배경 이미지
                 new Color(255, 228, 181),           // 밝은 살구색 배경
-                50,                                // Y 오프셋
+                -20,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
                         java.util.List.of(
                                 new Rectangle(0, 500, 800, 100),

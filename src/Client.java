@@ -20,7 +20,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private Image backgroundImage;
     private int mapWidth, mapHeight;
 
-    private Player player1, player2; // 두 플레이어
+    private Player player1, player2; // player1이 자신 player2는 상대방
     private Socket socket;
     private DataInputStream input;
     private DataOutputStream output;
@@ -66,21 +66,18 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 지형 초기화
         ground = new CopyOnWriteArrayList<>(currentMap.getTerrain());
 
-        // 플레이어 초기화 - 첫 번째 지형(Rectangle) 위에 배치
+// 플레이어 초기화 - 첫 번째 지형(Rectangle) 위에 배치
         Rectangle firstGround = ground.get(0); // 첫 번째 지형
         int playerStartX = firstGround.x + 50; // 지형의 시작점 + 여유 공간
         int playerStartY = firstGround.y - 195; // 지형 상단 - 플레이어 높이
 
-        int player2Id;
-
-        if(playerID == 1){
-            player2Id = 2;
+        if (playerID == 1) {
+            player1 = new Player1(playerStartX, playerStartY); // 1번 클라이언트는 Player1
+            player2 = new Player2(playerStartX + 100, playerStartY); // 상대방은 Player2
+        } else {
+            player1 = new Player2(playerStartX, playerStartY); // 2번 클라이언트는 Player2
+            player2 = new Player1(playerStartX + 100, playerStartY); // 상대방은 Player1
         }
-        else
-            player2Id = 1;
-
-        player1 = new Player1(playerStartX, playerStartY); // Player 초기화
-        player2 = new Player2(playerStartX + 100, playerStartY); // Player2 초기화
 
         // 상태바 및 버튼 이미지 로드
         stateBarImage = new ImageIcon("images/ui/statebar.png").getImage();
@@ -117,7 +114,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                     int y = Integer.parseInt(data[4]);
                     String state = data[5]; // 상태 데이터 수신
 
-                    if (id != playerID) { // 상대방 플레이어
+                    if (id != playerID) { // 상대방 플레이어 데이터
                         if (player2 != null) {
                             player2.setPosition(x, y);
                             player2.setState(state); // 상태 반영
@@ -133,6 +130,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     }
 
 
+
+
     private void sendPosition() {
         try {
             output.writeUTF("MOVE," + playerID + "," + currentMapIndex + "," + player1.getX() + "," + player1.getY() + "," + player1.getCurrentState());
@@ -140,6 +139,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             e.printStackTrace();
         }
     }
+
+
 
 
 
@@ -240,11 +241,16 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player1.jump();
         }
 
+        // Q 키에 특수 동작
+        if (pressedKeys.contains(KeyEvent.VK_Q)) {
+//            player1.performSpecialAction();
+        }
+
         // 포탈 위에 있는 경우 맵 전환
         if (pressedKeys.contains(KeyEvent.VK_UP)) {
-            Portal portal = getPortalOnPlayer(player1); // 플레이어와 충돌한 포탈 가져오기
+            Portal portal = getPortalOnPlayer(player1);
             if (portal != null) {
-                nextMap(portal); // 포탈을 통해 맵 전환
+                nextMap(portal);
             }
         }
 
@@ -254,6 +260,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         sendPosition();
         repaint();
     }
+
 
 
     @Override
