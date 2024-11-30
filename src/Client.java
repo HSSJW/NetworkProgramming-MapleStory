@@ -3,6 +3,7 @@ import Map.Portal;
 import Player.Player;
 import Player.Player1.Player1;
 import Player.Player2.Player2;
+import Sound.AudioPlayer;
 
 
 import javax.swing.*;
@@ -37,8 +38,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private CopyOnWriteArrayList<MapData> maps = MapData.getMaps();
     private int currentMapIndex = 0;
     private int opponentMapIndex = -1;
-
     private CopyOnWriteArrayList<Rectangle> ground;
+    private AudioPlayer audioPlayer; // 배경음악 플레이어
+
 
     // 키 입력 상태를 저장하는 Set
     private Set<Integer> pressedKeys;
@@ -99,6 +101,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         addKeyListener(this);
         setFocusable(true);
         requestFocusInWindow();
+
+
+        // 배경음악 초기화
+        audioPlayer = new AudioPlayer();
+        playCurrentMapMusic();
     }
 
 
@@ -228,7 +235,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     //키입력, 화면그리기
     @Override
     public void actionPerformed(ActionEvent e) {
-        int speed = 4;
+        int speed = 6;
 
         // 키 상태에 따라 동작 수행
         if (pressedKeys.contains(KeyEvent.VK_LEFT)) {
@@ -288,16 +295,17 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
 
         // 플레이어 위치 초기화
-        player1.setPosition(portal.getSpawnX(), portal.getSpawnY()); // 새 맵의 시작 위치 (임의로 지정)
+        player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
 
         // 상대방도 같은 맵으로 업데이트
         opponentMapIndex = currentMapIndex;
 
-        // 포지션 정보 전송 및 화면 갱신
-        sendPosition();
+        // 새로운 배경음악 재생
+        playCurrentMapMusic();
+
+        // 화면 갱신
         repaint();
     }
-
 
     // 플레이어와 충돌한 포탈 반환 (없으면 null)
     private Portal getPortalOnPlayer(Player player) {
@@ -316,7 +324,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         return maps.get(currentMapIndex);
     }
 
-
+    private void playCurrentMapMusic() {
+        String musicPath = getCurrentMap().getBackgroundMusicPath();
+        audioPlayer.play(musicPath);
+    }
 
 
     public static void main(String[] args) {

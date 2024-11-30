@@ -9,10 +9,13 @@ public class MapData {
     private int backgroundYOffset;               // 배경 이미지 Y 오프셋
     private CopyOnWriteArrayList<Rectangle> terrain; // 지형 데이터
     private CopyOnWriteArrayList<Portal> portals;    // 포탈 데이터
+    private String backgroundMusicPath;           // 배경음악 파일 경로
 
-    public MapData(String backgroundImagePath, Color backgroundColor, int backgroundYOffset,
+
+    public MapData(String backgroundImagePath, String backgroundMusicPath, Color backgroundColor, int backgroundYOffset,
                    CopyOnWriteArrayList<Rectangle> terrain, CopyOnWriteArrayList<Portal> portals) {
         this.backgroundImagePath = backgroundImagePath;
+        this.backgroundMusicPath = backgroundMusicPath;
         this.backgroundColor = backgroundColor;
         this.backgroundYOffset = backgroundYOffset;
         this.terrain = terrain;
@@ -39,13 +42,20 @@ public class MapData {
         return portals;
     }
 
+    public String getBackgroundMusicPath() {
+        return backgroundMusicPath;
+    }
+
     // 기존 getMaps 메서드에 배경색과 Y 오프셋만 추가
     public static CopyOnWriteArrayList<MapData> getMaps() {
         CopyOnWriteArrayList<MapData> maps = new CopyOnWriteArrayList<>();
 
+
+
         // 첫 번째 맵
         maps.add(new MapData(
                 "images/map/east_road-Photoroom.png",          // 배경 이미지
+                "SoundTrack/henesis_background.wav",
                 new Color(135, 206, 250),           // 하늘색 배경
                 130,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
@@ -72,7 +82,8 @@ public class MapData {
 
         // 두 번째 맵
         maps.add(new MapData(
-                "images/map/lis.gif",               // 배경 이미지
+                "images/map/KerningCity.png",             // 배경 이미지
+                "SoundTrack/KerningCity_background.wav",
                 new Color(255, 228, 181),           // 밝은 살구색 배경
                 -20,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
@@ -83,7 +94,7 @@ public class MapData {
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
                         java.util.List.of(
-                                new Portal(700, 400, 1, 700, 400)
+                                new Portal(700, 400, 0, 700, 400)
                         )
                 )
         ));
