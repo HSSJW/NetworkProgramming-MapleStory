@@ -42,6 +42,12 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private AudioPlayer audioPlayer; // 배경음악 플레이어
 
 
+    private double scaleX = 1.0;
+    private double scaleY = 1.0;
+    private static final int REFERENCE_WIDTH = 1400;  // 기준이 되는 창 너비
+    private static final int REFERENCE_HEIGHT = 800;  // 기준이 되는 창 높이
+
+
     // 키 입력 상태를 저장하는 Set
     private Set<Integer> pressedKeys;
 
@@ -154,87 +160,94 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
 
-        // 현재 창 크기 가져오기
-        int panelWidth = getWidth();
-        int panelHeight = getHeight();
+        // 현재 패널 크기 가져오기
+        int currentWidth = getWidth();
+        int currentHeight = getHeight();
+
+        // 스케일 팩터 계산
+        scaleX = (double) currentWidth / REFERENCE_WIDTH;
+        scaleY = (double) currentHeight / REFERENCE_HEIGHT;
+
+        // 스케일 변환 적용
+        g2d.scale(scaleX, scaleY);
 
         // 현재 맵 데이터 가져오기
         MapData currentMap = getCurrentMap();
 
+        // 배경 색상 채우기
+        g2d.setColor(currentMap.getBackgroundColor());
+        g2d.fillRect(0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT);
 
-//        currentMap = maps.get(2);  //세번째 맵 테스트용 인덱스 설정
-//        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();//세번째 맵 테스트용 인덱스 설정
-
-
-        // **배경 색상 채우기**
-        g.setColor(currentMap.getBackgroundColor());
-        g.fillRect(0, 0, panelWidth, panelHeight);
-
-        // 배경 이미지 원본 크기 가져오기
-        int bgWidth = backgroundImage.getWidth(null);
-        int bgHeight = backgroundImage.getHeight(null);
-
-        // 배경 이미지를 창 크기에 맞게 확장 (여백 없이 채우기)
-        double panelAspect = (double) panelWidth / panelHeight;
-        double bgAspect = (double) bgWidth / bgHeight;
-
-        int newBgWidth, newBgHeight;
-
-        if (panelAspect > bgAspect) {
-            // 창의 가로가 더 넓은 경우: 높이를 맞추고 가로를 확장
-            newBgHeight = panelHeight;
-            newBgWidth = (int) (bgWidth * ((double) panelHeight / bgHeight));
-        } else {
-            // 창의 세로가 더 긴 경우: 가로를 맞추고 높이를 확장
-            newBgWidth = panelWidth;
-            newBgHeight = (int) (bgHeight * ((double) panelWidth / bgWidth));
-        }
-
-        // 배경 이미지를 중앙에 맞추어 그리기 (맵의 Y 오프셋 적용)
-        int x = (panelWidth - newBgWidth) / 2;
-        int y = (panelHeight - newBgHeight) / 2 + currentMap.getBackgroundYOffset();
-        g.drawImage(backgroundImage, x, y, newBgWidth, newBgHeight, this);
-
-
+        // 배경 이미지 그리기
+        g2d.drawImage(backgroundImage, 0, currentMap.getBackgroundYOffset(),
+                REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
 
         // 지형 그리기
-        g.setColor(Color.GREEN);
+        g2d.setColor(Color.GREEN);
         for (Rectangle rect : currentMap.getTerrain()) {
-            g.fillRect(rect.x, rect.y, rect.width, rect.height);
+            g2d.fillRect(
+                    rect.x,
+                    rect.y,
+                    rect.width,
+                    rect.height
+            );
         }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {
-            portal.draw(g, this);
+            portal.draw(g2d, this);
         }
 
         // 플레이어 그리기
-        player1.draw(g, this);
+        player1.draw(g2d, this);
         if (opponentConnected && opponentMapIndex == currentMapIndex) {
-            player2.draw(g, this);
+            player2.draw(g2d, this);
         }
 
-        // 상태바 그리기 - 가로 길이를 창 크기에 맞추기
-        int stateBarWidth = panelWidth; // 창 크기에 맞춘 가로 길이
+        // UI 요소 그리기
+        drawUI(g2d);
+    }
+
+    private void drawUI(Graphics2D g2d) {
+        // 상태바 그리기
         int stateBarHeight = stateBarImage.getHeight(null);
-        int stateBarX = 0;
-        int stateBarY = panelHeight - stateBarHeight;
-        g.drawImage(stateBarImage, stateBarX, stateBarY, stateBarWidth, stateBarHeight, this);
+        g2d.drawImage(stateBarImage, 0, REFERENCE_HEIGHT - stateBarHeight,
+                REFERENCE_WIDTH, stateBarHeight, this);
 
         // 버튼 그리기
         int buttonSpacing = 10;
         int buttonWidth = tradeButtonImage.getWidth(null);
         int buttonHeight = tradeButtonImage.getHeight(null);
-        int buttonStartX = stateBarX + stateBarWidth - (buttonWidth * 3 + buttonSpacing * 2);
-        int buttonY = stateBarY + (stateBarHeight - buttonHeight) / 2;
+        int buttonStartX = REFERENCE_WIDTH - (buttonWidth * 3 + buttonSpacing * 2);
+        int buttonY = REFERENCE_HEIGHT - stateBarHeight +
+                (stateBarHeight - buttonHeight) / 2;
 
-        g.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
-        g.drawImage(shortcutButtonImage, buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
-        g.drawImage(shopButtonImage, buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
+        g2d.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
+        g2d.drawImage(shortcutButtonImage,
+                buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
+        g2d.drawImage(shopButtonImage,
+                buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
     }
 
+    // 마우스 클릭 위치 변환을 위한 메서드
+    private Point transformPoint(Point p) {
+        return new Point(
+                (int)(p.x / scaleX),
+                (int)(p.y / scaleY)
+        );
+    }
 
+    // Player 클래스의 update 메서드에서 사용할 스케일 적용 메서드
+    private Rectangle scaleRectangle(Rectangle rect) {
+        return new Rectangle(
+                (int)(rect.x * scaleX),
+                (int)(rect.y * scaleY),
+                (int)(rect.width * scaleX),
+                (int)(rect.height * scaleY)
+        );
+    }
 
 
     //키입력, 화면그리기
