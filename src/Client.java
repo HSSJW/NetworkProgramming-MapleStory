@@ -360,17 +360,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             JFrame frame = new JFrame("2-Player Game");
             Client gamePanel = new Client(playerID, "localhost", 5000);
 
-//            int mapWidth = gamePanel.mapWidth;
-//            int mapHeight = gamePanel.mapHeight;
-
-            int mapWidth = 1000;
-            int mapHeight = 500;
-
             frame.add(gamePanel);
+            frame.setPreferredSize(new Dimension(REFERENCE_WIDTH, REFERENCE_HEIGHT));
             frame.pack();
-            Insets insets = frame.getInsets();
-            frame.setSize(mapWidth + insets.left + insets.right, mapHeight + insets.top + insets.bottom);
-
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
