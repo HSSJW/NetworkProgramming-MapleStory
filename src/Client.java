@@ -36,7 +36,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     //맵관련
     private CopyOnWriteArrayList<MapData> maps = MapData.getMaps();
-    private int currentMapIndex = 0;
+    private int currentMapIndex =0;
     private int opponentMapIndex = -1;
     private CopyOnWriteArrayList<Rectangle> ground;
     private AudioPlayer audioPlayer; // 배경음악 플레이어
@@ -162,6 +162,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 현재 맵 데이터 가져오기
         MapData currentMap = getCurrentMap();
 
+
+//        currentMap = maps.get(2);  //세번째 맵 테스트용 인덱스 설정
+//        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();//세번째 맵 테스트용 인덱스 설정
+
+
         // **배경 색상 채우기**
         g.setColor(currentMap.getBackgroundColor());
         g.fillRect(0, 0, panelWidth, panelHeight);
@@ -194,10 +199,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
 
         // 지형 그리기
-//        g.setColor(Color.GREEN);
-//        for (Rectangle rect : currentMap.getTerrain()) {
-//            g.fillRect(rect.x, rect.y, rect.width, rect.height);
-//        }
+        g.setColor(Color.GREEN);
+        for (Rectangle rect : currentMap.getTerrain()) {
+            g.fillRect(rect.x, rect.y, rect.width, rect.height);
+        }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {
@@ -256,6 +261,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 포탈 위에 있는 경우 맵 전환
         if (pressedKeys.contains(KeyEvent.VK_UP)) {
             Portal portal = getPortalOnPlayer(player1);
+
             if (portal != null) {
                 nextMap(portal);
             }
@@ -288,8 +294,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     //플레이어가 포탈위에 있는지 판단하는 메서드
     // 포탈을 통해 다음 맵으로 이동
     private void nextMap(Portal portal) {
+
         currentMapIndex = portal.getNextMapIndex(); // 포탈에 설정된 다음 맵 인덱스 가져오기
         MapData currentMap = getCurrentMap();
+
+        
 
         // 배경 이미지 업데이트
         backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
@@ -302,6 +311,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 새로운 배경음악 재생
         playCurrentMapMusic();
+
+
 
         // 화면 갱신
         repaint();

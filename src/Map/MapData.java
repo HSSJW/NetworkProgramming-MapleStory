@@ -75,7 +75,7 @@ public class MapData {
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
                         java.util.List.of(
-                                new Portal(1250, 460, 1, 700, 400)
+                                new Portal(1250, 460, 1, 700, 400) //커닝시티로 이동하는 포탈
                         )
                 )
         ));
@@ -94,11 +94,32 @@ public class MapData {
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
                         java.util.List.of(
-                                new Portal(700, 400, 0, 700, 400)
+                                new Portal(700, 400, 0, 700, 400), //index:0 맵으로 이동하는 포탈 (좌측)
+                                new Portal(300, 400, 2, 700, 400) //index : 2 맵으로 이동하는 포탈 (우측)
                         )
                 )
         ));
 
+        // 세 번째 맵
+        maps.add(new MapData(
+                "images/map/Ludibrium.png",             // 배경 이미지
+                "SoundTrack/Ludibrium.wav",
+                new Color(255, 228, 181),           // 밝은 살구색 배경
+                100,                                // Y 오프셋
+                new CopyOnWriteArrayList<>(         // 지형 데이터
+                        java.util.List.of(
+                                new Rectangle(0, 583, 1500, 100), //1층 바닥
+                                new Rectangle(250, 350, 150, 20)
+                        )
+                ),
+                new CopyOnWriteArrayList<>(         // 포탈 데이터
+                        java.util.List.of(
+                                new Portal(700, 400, 2, 700, 400)
+                        )
+                )
+        ));
+
+        System.out.println(maps.size());
         return maps;
     }
 }
