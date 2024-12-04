@@ -60,17 +60,17 @@ public class MapData {
                 130,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
                         java.util.List.of(
-                                new Rectangle(50, 610, 435, 20),//1-1
-                                new Rectangle(485, 640, 130, 20),//1-2
-                                new Rectangle(615, 610, 352, 20),//1-3
-                                new Rectangle(962, 640, 130, 20),//1-4
-                                new Rectangle(1097, 610, 305, 20),//1-5
-                                new Rectangle(380, 550, 50, 20), //2-1
-                                new Rectangle(1080, 520, 70, 20),//2-2
-                                new Rectangle(430, 480, 650, 20),//3층 가로바닥
-                                new Rectangle(1110, 450, 90, 20), //4층 공중계단
-                                new Rectangle(1010, 415, 90, 20), //공중계단 2
-                                new Rectangle(860, 380, 130, 20) // 공중계단 3
+                                new Rectangle(45, 605, 435, 20),//1-1
+                                new Rectangle(475, 640, 130, 20),//1-2
+                                new Rectangle(600, 605, 352, 20),//1-3
+                                new Rectangle(940, 640, 130, 20),//1-4
+                                new Rectangle(1062, 605, 305, 20),//1-5
+                                new Rectangle(365, 540, 50, 20), //2-1
+                                new Rectangle(1055, 510, 70, 20),//2-2
+                                new Rectangle(425, 465, 650, 20),//3층 가로바닥
+                                new Rectangle(1100, 420, 80, 20), //4층 공중계단
+                                new Rectangle(980, 375, 80, 20), //공중계단 2
+                                new Rectangle(840, 340, 130, 20) // 공중계단 3
                         )
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
