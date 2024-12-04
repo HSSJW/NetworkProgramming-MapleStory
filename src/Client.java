@@ -46,7 +46,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private double scaleY = 1.0;
     private static final int REFERENCE_WIDTH = 1400;  // 기준이 되는 창 너비
     private static final int REFERENCE_HEIGHT = 800;  // 기준이 되는 창 높이
-
+    private int cameraX = 0;
+    private int cameraY = 0;
+    private static final int VIEWPORT_WIDTH = 800;  // 화면에 보이는 영역 너비
+    private static final int VIEWPORT_HEIGHT = 600; // 화면에 보이는 영역 높이
 
     // 키 입력 상태를 저장하는 Set
     private Set<Integer> pressedKeys;
@@ -210,6 +213,16 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         drawUI(g2d);
     }
 
+    private void updateCamera() {
+        // 플레이어가 화면 중앙에 오도록 카메라 위치 계산
+        cameraX = player1.getX() - VIEWPORT_WIDTH / 2;
+        cameraY = player1.getY() - VIEWPORT_HEIGHT / 2;
+
+        // 카메라가 맵 경계를 벗어나지 않도록 제한
+        cameraX = Math.max(0, Math.min(cameraX, mapWidth - VIEWPORT_WIDTH));
+        cameraY = Math.max(0, Math.min(cameraY, mapHeight - VIEWPORT_HEIGHT));
+    }
+
     private void drawUI(Graphics2D g2d) {
         // 상태바 그리기
         int stateBarHeight = stateBarImage.getHeight(null);
@@ -361,7 +374,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             Client gamePanel = new Client(playerID, "localhost", 5000);
 
             frame.add(gamePanel);
-            frame.setPreferredSize(new Dimension(REFERENCE_WIDTH, REFERENCE_HEIGHT));
+            frame.setPreferredSize(new Dimension(VIEWPORT_WIDTH, VIEWPORT_HEIGHT));
             frame.pack();
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setLocationRelativeTo(null);

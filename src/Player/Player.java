@@ -84,53 +84,60 @@ public abstract class Player {
 //        }
     }
 
-    // 플레이어 상태 업데이트
     public void update(MapData currentMap, int mapWidth, int mapHeight) {
-        // 현재 맵의 지형 가져오기
         Rectangle[] ground = currentMap.getTerrain().toArray(new Rectangle[0]);
 
-        // 중력 항상 적용
+        // 중력 적용
         verticalSpeed += GRAVITY;
 
         // 위치 업데이트
         y += verticalSpeed;
 
         // 바닥 충돌 감지
-        boolean wasOnGround = onGround; // 이전에 바닥에 있었는지 기록
-        onGround = false; // 기본적으로 공중에 있다고 가정
+        boolean wasOnGround = onGround;
+        onGround = false;
 
         // 가장 가까운 지형을 추적
         Rectangle closestGround = null;
 
         for (Rectangle rect : ground) {
-
-
-
             // 여백 보정을 위한 오프셋 추가
-            int bottomOffset = 0; // 이미지 아래쪽 판정 확장값
+            int bottomOffset = 0;
+            int maxStepHeight = 20; // 최대로 올라갈 수 있는 높이 제한
 
-            if (x + width - 20 > rect.x && x + 20 < rect.x + rect.width && // 이미지 좌우 여백 보정
-                    y + height + bottomOffset >= rect.y && y + height - verticalSpeed + bottomOffset <= rect.y) {
-                // 가장 가까운 지형 선택
-                if (closestGround == null || rect.y < closestGround.y) {
-                    closestGround = rect; // 더 위에 있는 지형 선택
+            // 플레이어의 발 위치와 지형의 높이 차이 계산
+            int heightDifference = (y + height) - rect.y;
+
+            // 플레이어가 지형 위에 있고, 좌우로 겹치는지 확인
+            if (x + width - 20 > rect.x && x + 20 < rect.x + rect.width) {
+                // 높이 차이가 허용 범위 내인 경우에만 처리
+                if (Math.abs(heightDifference) <= maxStepHeight) {
+                    // 플레이어가 지형보다 위에 있고 떨어지는 중인 경우
+                    if (y + height >= rect.y && y + height - verticalSpeed <= rect.y) {
+                        if (closestGround == null || rect.y < closestGround.y) {
+                            closestGround = rect;
+                        }
+                    }
+                    // 플레이어가 지형보다 약간 아래에 있는 경우 (계단 오르기)
+                    else if (heightDifference > 0 && heightDifference <= maxStepHeight && verticalSpeed >= 0) {
+                        if (closestGround == null || rect.y < closestGround.y) {
+                            closestGround = rect;
+                        }
+                    }
                 }
             }
-
         }
 
         // 가장 가까운 지형과 충돌 처리
         if (closestGround != null) {
             onGround = true;
-            y = closestGround.y - height; // 지형 위에 위치 고정
-            verticalSpeed = 0;            // 수직 속도 초기화
+            y = closestGround.y - height;
+            verticalSpeed = 0;
 
-            // 점프 상태에서 착지 상태로 전환
             if (currentState.equals("jump")) {
-                stopMoving(); // 점프가 끝난 경우 idle 상태로 전환
+                stopMoving();
             }
         }
-
 
         // 착지 시 idle 상태로 전환
         if (onGround && !wasOnGround && !moving) {
@@ -138,15 +145,15 @@ public abstract class Player {
         }
 
         // 맵 경계 내로 제한
-        x = Math.max(50, Math.min(mapWidth - width + 100, x)); //플레이어의 x축 이동을 제한(맵 안에서만 이동 가능하도록)
-        y = Math.min(mapHeight - height + 150, y); //플레이어의 y축 이동을 제한
+        x = Math.max(50, Math.min(mapWidth - width + 100, x));
+        y = Math.min(mapHeight - height + 150, y);
 
         // 이동 상태가 없으면 idle로 복구
         if (!moving && onGround) {
             stopMoving();
         }
 
-        // 이동 상태 초기화 (프레임마다)
+        // 이동 상태 초기화
         moving = false;
     }
 

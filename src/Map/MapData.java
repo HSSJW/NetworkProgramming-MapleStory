@@ -88,14 +88,35 @@ public class MapData {
                 -20,                                // Y 오프셋
                 new CopyOnWriteArrayList<>(         // 지형 데이터
                         java.util.List.of(
-                                new Rectangle(0, 500, 800, 100),
-                                new Rectangle(250, 350, 150, 20)
+                                new Rectangle(0, 580, 1400, 20),    // 메인 바닥
+                                new Rectangle(200, 480, 300, 20),   // 중간 왼쪽 발판
+                                new Rectangle(600, 480, 300, 20),   // 중간 오른쪽 발판
+                                new Rectangle(400, 380, 200, 20),   // 상단 중앙 발판
+                                new Rectangle(100, 430, 150, 20),   // 왼쪽 중간 발판
+                                new Rectangle(900, 430, 150, 20) ,   // 오른쪽 중간 발판
+        new Rectangle(200, 500, 300, -150),  // 왼쪽에서 오른쪽으로 올라가는 경사,
+                                // 왼쪽 계단형 지형
+        new Rectangle(100, 530, 200, 20),   // 1단계
+                new Rectangle(150, 520, 200, 20),   // 2단계
+                new Rectangle(200, 510, 200, 20),   // 3단계
+                new Rectangle(250, 500, 200, 20),   // 4단계
+
+                // 중앙 계단형 지형
+                new Rectangle(500, 530, 200, 20),   // 1단계
+                new Rectangle(550, 480, 200, 20),   // 2단계
+                new Rectangle(600, 430, 200, 20),   // 3단계
+
+                // 오른쪽 계단형 지형
+                new Rectangle(900, 530, 200, 20),   // 1단계
+                new Rectangle(950, 480, 200, 20),   // 2단계
+                new Rectangle(1000, 430, 200, 20),  // 3단계
+                new Rectangle(1050, 380, 200, 20)   // 4단계
                         )
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
                         java.util.List.of(
-                                new Portal(700, 400, 0, 700, 400), //index:0 맵으로 이동하는 포탈 (좌측)
-                                new Portal(300, 400, 2, 700, 400) //index : 2 맵으로 이동하는 포탈 (우측)
+                                new Portal(50, 500, 0, 700, 400),    // 왼쪽 포탈 (0번 맵으로)
+                                new Portal(1300, 500, 2, 700, 400)   // 오른쪽 포탈 (2번 맵으로)
                         )
                 )
         ));
@@ -114,7 +135,7 @@ public class MapData {
                 ),
                 new CopyOnWriteArrayList<>(         // 포탈 데이터
                         java.util.List.of(
-                                new Portal(700, 400, 2, 700, 400)
+                                new Portal(700, 400, 0, 700, 400)
                         )
                 )
         ));
