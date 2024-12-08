@@ -23,6 +23,10 @@ public abstract class Player {
     protected Image hitRightImage, hitLeftImage;
     protected Image currentImage; // 현재 상태의 이미지
 
+    protected final int MAX_FALL_SPEED = 30; // 최대 낙하 속도 제한
+    protected final int COLLISION_CHECK_STEPS = 4; // 충돌 검사 단계 수
+
+
     public Player(int id, int startX, int startY) {
         this.id = id;
         this.x = startX;
@@ -88,8 +92,11 @@ public abstract class Player {
         Rectangle[] ground = currentMap.getTerrain().toArray(new Rectangle[0]);
 
         // 중력 적용
-        verticalSpeed += GRAVITY;
+        if(verticalSpeed <= 25)  //지형 뚫고 내려가는 것을 방지하기위한 수직가속도 제한 설정
+            verticalSpeed += GRAVITY;
 
+
+        System.out.println(verticalSpeed);
         // 위치 업데이트
         y += verticalSpeed;
 
