@@ -96,7 +96,7 @@ public abstract class Player {
             verticalSpeed += GRAVITY;
 
 
-        System.out.println(verticalSpeed);
+//        System.out.println(verticalSpeed);
         // 위치 업데이트
         y += verticalSpeed;
 
