@@ -18,8 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Client extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
-    private Image backgroundImage;
-    private int mapWidth, mapHeight;
+
 
     private Player player1, player2; // player1이 자신 player2는 상대방
     private Socket socket;
@@ -40,8 +39,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private int opponentMapIndex = -1;
     private CopyOnWriteArrayList<Rectangle> ground;
     private AudioPlayer audioPlayer; // 배경음악 플레이어
-
-
+    private Image baseImage; // 배경이미지
+    private Image backgroundImage; //지형 이미지
+    private int mapWidth, mapHeight; 
+    
     private double scaleX = 1.0;
     private double scaleY = 1.0;
     private static final int REFERENCE_WIDTH = 1400;  // 기준이 되는 창 너비
@@ -62,7 +63,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 첫 번째 맵 설정
         MapData currentMap = getCurrentMap();
-        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
+        baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage(); //배경이미지 초기화
+        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage(); //지형이미지 초기화
         mapWidth = backgroundImage.getWidth(null);
         mapHeight = backgroundImage.getHeight(null);
 
@@ -176,12 +178,15 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 스케일 변환 적용
         g2d.scale(scaleX, scaleY);
 
+        // 배경 이미지 그리기
+        g2d.drawImage(baseImage, 0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
+        
         // 현재 맵 데이터 가져오기
         MapData currentMap = getCurrentMap();
 
         // 배경 색상 채우기
-        g2d.setColor(currentMap.getBackgroundColor());
-        g2d.fillRect(0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT);
+//        g2d.setColor(currentMap.getBackgroundColor());
+//        g2d.fillRect(0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT);
 
         // 배경 이미지 그리기
         g2d.drawImage(backgroundImage, 0, currentMap.getBackgroundYOffset(),
@@ -324,11 +329,12 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         currentMapIndex = portal.getNextMapIndex(); // 포탈에 설정된 다음 맵 인덱스 가져오기
         MapData currentMap = getCurrentMap();
 
+
+        baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();  // 배경 이미지 업데이트
+        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();// 지형 이미지 업데이트
         
-
-        // 배경 이미지 업데이트
-        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
-
+        
+        
         // 플레이어 위치 초기화
         player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
 
