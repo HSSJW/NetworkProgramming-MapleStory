@@ -19,13 +19,17 @@ public class Map2 extends MapData {
 
         // 메인 플랫폼 추가
         terrainList.add(new Rectangle(0, 650, 1400, 20));    // 1층 메인
-        terrainList.add(new Rectangle(100, 480, 1100, 20));  // 2층 메인
+        terrainList.add(new Rectangle(100, 480, 1140, 20));  // 2층 메인
+        terrainList.add(new Rectangle(100, 300, 1140, 20));  // 3층 메인
+        terrainList.add(new Rectangle(280, 117, 780, 20));  // 4층 메인
 
         // 여러 계단 생성 (x 좌표만 변경하여 추가)
-        terrainList.addAll(createStairs(235, 630));  // 첫 번째 계단
-        // terrainList.addAll(createStairs(500, 630));  // 두 번째 계단
-        // terrainList.addAll(createStairs(800, 630));  // 세 번째 계단
-
+        terrainList.addAll(createStairs(235, 630));  // 1-1 계단
+        terrainList.addAll(createStairs(740, 630));  // 1-2 계단
+        terrainList.addAll(createStairs(570, 460)); //  2층 계단
+        terrainList.add(new Rectangle(815,305, 20, 20)); //2층 계단 추가
+        terrainList.addAll(createStairs(570, 280));  // 3층 계단
+        terrainList.add(new Rectangle(815,125, 20, 20)); //3층 계단 추가
         this.terrain = new CopyOnWriteArrayList<>(terrainList);
 
         // 포탈 데이터 초기화
