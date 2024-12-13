@@ -9,7 +9,7 @@ public class Map2 extends MapData {
         this.baseImagePath = "images/map/baseImage/map2_base.png";
         this.backgroundImagePath = "images/map/KerningCity.png";
         this.backgroundMusicPath = "SoundTrack/KerningCity_background.wav";
-        this.backgroundColor = new Color(255, 228, 181);
+
         this.backgroundYOffset = -20;
 
         // 지형 데이터 초기화

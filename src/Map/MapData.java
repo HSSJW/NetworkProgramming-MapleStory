@@ -7,7 +7,6 @@ public abstract class MapData {
     protected String baseImagePath;  // 배경이미지
     protected String backgroundImagePath; // 지형이미지
     protected String backgroundMusicPath; //배경음악
-    protected Color backgroundColor;
     protected int backgroundYOffset;
     protected CopyOnWriteArrayList<Rectangle> terrain;
     protected CopyOnWriteArrayList<Portal> portals;
@@ -28,9 +27,7 @@ public abstract class MapData {
         return backgroundMusicPath;
     }
 
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
+
 
     public int getBackgroundYOffset() {
         return backgroundYOffset;

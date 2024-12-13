@@ -9,7 +9,6 @@ public class Map3 extends MapData {
         this.baseImagePath = "images/map/baseImage/map3_base.png";
         this.backgroundImagePath = "images/map/Ludibrium.png";
         this.backgroundMusicPath = "SoundTrack/Ludibrium.wav";
-        this.backgroundColor = new Color(255, 228, 181);
         this.backgroundYOffset = 100;
 
         // 지형 데이터 초기화

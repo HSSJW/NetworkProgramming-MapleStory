@@ -9,7 +9,6 @@ public class Map1 extends MapData {
         this.baseImagePath = "images/map/baseImage/map1_base.png";
         this.backgroundImagePath = "images/map/east_road-Photoroom.png";
         this.backgroundMusicPath = "SoundTrack/henesis_background.wav";
-        this.backgroundColor = new Color(135, 206, 250);
         this.backgroundYOffset = 130;
 
         // 지형 데이터 초기화

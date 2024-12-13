@@ -184,10 +184,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 현재 맵 데이터 가져오기
         MapData currentMap = getCurrentMap();
 
-        // 배경 색상 채우기
-//        g2d.setColor(currentMap.getBackgroundColor());
-//        g2d.fillRect(0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT);
-
         // 배경 이미지 그리기
         g2d.drawImage(backgroundImage, 0, currentMap.getBackgroundYOffset(),
                 REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
