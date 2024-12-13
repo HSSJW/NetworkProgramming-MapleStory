@@ -340,8 +340,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 새로운 배경음악 재생
         playCurrentMapMusic();
 
-
-
         // 화면 갱신
         repaint();
     }

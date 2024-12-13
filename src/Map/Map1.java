@@ -14,17 +14,18 @@ public class Map1 extends MapData {
         // 지형 데이터 초기화
         this.terrain = new CopyOnWriteArrayList<>(
                 java.util.List.of(
-                        new Rectangle(45, 605, 435, 20),
-                        new Rectangle(475, 640, 130, 20),
-                        new Rectangle(600, 605, 352, 20),
-                        new Rectangle(940, 640, 130, 20),
-                        new Rectangle(1062, 605, 305, 20),
-                        new Rectangle(365, 540, 50, 20),
-                        new Rectangle(1055, 510, 70, 20),
-                        new Rectangle(425, 465, 650, 20),
-                        new Rectangle(1100, 420, 80, 20),
-                        new Rectangle(980, 375, 80, 20),
-                        new Rectangle(840, 340, 130, 20)
+                        new Rectangle(45, 605, 433, 20), //1-1
+                        new Rectangle(475, 640, 130, 20), //1-2
+                        new Rectangle(600, 605, 344, 20), //1-3
+                        new Rectangle(940, 640, 130, 20), //1-4
+                        new Rectangle(1062, 605, 305, 20), //1-5
+                        new Rectangle(365, 540, 55, 20), //2-1
+                        new Rectangle(1055, 510, 70, 20), //2-2
+                        new Rectangle(425, 465, 645, 20), //3층 가로바닥
+                        new Rectangle(1092, 420, 80, 20), //4층 공중계단
+                        new Rectangle(980, 375, 80, 20), //공중계단 2
+                        new Rectangle(835, 340, 130, 20) //공중계단 3
+
                 )
         );
 
