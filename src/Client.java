@@ -1,5 +1,6 @@
 import Map.MapData;
 import Map.Portal;
+import Monster.*;
 import Player.Player;
 import Player.Player1.Player1;
 import Player.Player2.Player2;
@@ -41,8 +42,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private AudioPlayer audioPlayer; // 배경음악 플레이어
     private Image baseImage; // 배경이미지
     private Image backgroundImage; //지형 이미지
-    private int mapWidth, mapHeight; 
-    
+    private int mapWidth, mapHeight;
+
     private double scaleX = 1.0;
     private double scaleY = 1.0;
     private static final int REFERENCE_WIDTH = 1400;  // 기준이 되는 창 너비
@@ -52,13 +53,21 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private static final int VIEWPORT_WIDTH = 800;  // 화면에 보이는 영역 너비
     private static final int VIEWPORT_HEIGHT = 600; // 화면에 보이는 영역 높이
 
+    //몬스터 관련
+    private MonsterManager monsterManager;
+    private boolean isAttacking = false;
+    private long lastAttackTime = 0;
+    private static final long ATTACK_COOLDOWN = 500; // 0.5초 공격 쿨다운
+
+
     // 키 입력 상태를 저장하는 Set
     private Set<Integer> pressedKeys;
 
     // Client.java 내 Player 초기화 코드 수정
     public Client(int playerID, String host, int port) throws IOException {
         this.playerID = playerID;
-
+        this.monsterManager = new MonsterManager(); //몬스터 매니저 초기화
+        monsterManager.initializeMonsters(currentMapIndex);
 
 
         // 첫 번째 맵 설정
@@ -122,24 +131,24 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     private void receiveUpdates() {
         try {
+            byte[] buffer = new byte[4096];
+            StringBuilder messageBuilder = new StringBuilder();
+
             while (true) {
                 String message = input.readUTF();
-                if (message.startsWith("MOVE")) {
-                    String[] data = message.split(",");
-                    int id = Integer.parseInt(data[1]);
-                    int mapIndex = Integer.parseInt(data[2]);
-                    int x = Integer.parseInt(data[3]);
-                    int y = Integer.parseInt(data[4]);
-                    String state = data[5]; // 상태 데이터 수신
+                System.out.println("Raw received message: " + message);  // 디버깅용
 
-                    if (id != playerID) { // 상대방 플레이어 데이터
-                        if (player2 != null) {
-                            player2.setPosition(x, y);
-                            player2.setState(state); // 상태 반영
-                            opponentMapIndex = mapIndex;
-                            opponentConnected = true;
-                        }
-                    }
+                // 메시지 시작 부분 확인
+                if (message.contains("MONSTER_UPDATE")) {
+                    // MONSTER_UPDATE 부분부터 시작하도록 자르기
+                    int startIndex = message.indexOf("MONSTER_UPDATE");
+                    message = message.substring(startIndex);
+                }
+
+                if (message.startsWith("MOVE")) {
+                    handleMoveMessage(message);
+                } else if (message.startsWith("MONSTER_UPDATE")) {
+                    handleMonsterUpdate(message);
                 }
             }
         } catch (IOException e) {
@@ -148,7 +157,73 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     }
 
 
+    private void handleMoveMessage(String message) {
+        try {
+            String[] data = message.split(",");
+            int id = Integer.parseInt(data[1]);
+            int mapIndex = Integer.parseInt(data[2]);
+            int x = Integer.parseInt(data[3]);
+            int y = Integer.parseInt(data[4]);
+            String state = data[5];
 
+            if (id != playerID) {
+                if (player2 != null) {
+                    player2.setPosition(x, y);
+                    player2.setState(state);
+                    opponentMapIndex = mapIndex;
+                    opponentConnected = true;
+                }
+            }
+            repaint();
+        } catch (Exception e) {
+            System.out.println("Error handling move message: " + message);
+            e.printStackTrace();
+        }
+    }
+
+    private void handleMonsterUpdate(String message) {
+        try {
+            String monsterData = message.substring("MONSTER_UPDATE,".length());
+            updateMonsterStates(monsterData);
+        } catch (Exception e) {
+            System.out.println("Error handling monster update: " + message);
+            e.printStackTrace();
+        }
+    }
+
+    private void updateMonsterStates(String monsterData) {
+        try {
+            System.out.println("Processing monster data: " + monsterData);
+
+            if (monsterData == null || monsterData.trim().isEmpty()) {
+                return;
+            }
+
+            String[] monsters = monsterData.split(";");
+            for (int i = 0; i < monsters.length && i < monsterManager.getMonsters().size(); i++) {
+                String monsterInfo = monsters[i].trim();
+                if (monsterInfo.isEmpty() || !monsterInfo.matches("\\d+,\\d+,\\d+,\\d+,\\d+,(true|false)")) {
+                    System.out.println("Invalid monster data format: " + monsterInfo);
+                    continue;
+                }
+
+                String[] data = monsterInfo.split(",");
+                Monster monster = monsterManager.getMonsters().get(i);
+
+                monster.setPosition(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
+                monster.setHp(Integer.parseInt(data[2]));
+                monster.setState(
+                        Monster.State.values()[Integer.parseInt(data[3])],
+                        Monster.Direction.values()[Integer.parseInt(data[4])]
+                );
+                monster.setAlive(Boolean.parseBoolean(data[5]));
+            }
+            repaint();
+        } catch (Exception e) {
+            System.out.println("Error updating monster states: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     private void sendPosition() {
         try {
@@ -180,7 +255,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 배경 이미지 그리기
         g2d.drawImage(baseImage, 0, 0, REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
-        
+
         // 현재 맵 데이터 가져오기
         MapData currentMap = getCurrentMap();
 
@@ -210,19 +285,17 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player2.draw(g2d, this);
         }
 
+        //몬스터 그리기
+        for (Monster monster : monsterManager.getMonsters()) {
+            if (monster.isAlive()) {
+                monster.paintMonster(g2d, this);
+            }
+        }
+
         // UI 요소 그리기
         drawUI(g2d);
     }
 
-    private void updateCamera() {
-        // 플레이어가 화면 중앙에 오도록 카메라 위치 계산
-        cameraX = player1.getX() - VIEWPORT_WIDTH / 2;
-        cameraY = player1.getY() - VIEWPORT_HEIGHT / 2;
-
-        // 카메라가 맵 경계를 벗어나지 않도록 제한
-        cameraX = Math.max(0, Math.min(cameraX, mapWidth - VIEWPORT_WIDTH));
-        cameraY = Math.max(0, Math.min(cameraY, mapHeight - VIEWPORT_HEIGHT));
-    }
 
     private void drawUI(Graphics2D g2d) {
         // 상태바 그리기
@@ -245,29 +318,13 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                 buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
     }
 
-    // 마우스 클릭 위치 변환을 위한 메서드
-    private Point transformPoint(Point p) {
-        return new Point(
-                (int)(p.x / scaleX),
-                (int)(p.y / scaleY)
-        );
-    }
 
-    // Player 클래스의 update 메서드에서 사용할 스케일 적용 메서드
-    private Rectangle scaleRectangle(Rectangle rect) {
-        return new Rectangle(
-                (int)(rect.x * scaleX),
-                (int)(rect.y * scaleY),
-                (int)(rect.width * scaleX),
-                (int)(rect.height * scaleY)
-        );
-    }
 
 
     //키입력, 화면그리기
     @Override
     public void actionPerformed(ActionEvent e) {
-        int speed = 6; //이동속도
+        int speed = 6;
 
         // 키 상태에 따라 동작 수행
         if (pressedKeys.contains(KeyEvent.VK_LEFT)) {
@@ -280,15 +337,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player1.jump();
         }
 
-        // Q 키에 특수 동작
-        if (pressedKeys.contains(KeyEvent.VK_Q)) {
-//            player1.performSpecialAction();
-        }
-
         // 포탈 위에 있는 경우 맵 전환
         if (pressedKeys.contains(KeyEvent.VK_UP)) {
             Portal portal = getPortalOnPlayer(player1);
-
             if (portal != null) {
                 nextMap(portal);
             }
@@ -301,11 +352,51 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         repaint();
     }
 
+    // 공격 처리 메소드 추가
+    private void attackMonster() {
+        // 공격 범위 설정 (플레이어 앞쪽 30픽셀)
+        Rectangle attackBox = new Rectangle(
+                player1.getX() + (player1.getCurrentState().equals("right") ? player1.getWidth() : -30),
+                player1.getY(),
+                30,
+                player1.getHeight()
+        );
+
+        // 몬스터와의 충돌 체크
+        for (int i = 0; i < monsterManager.getMonsters().size(); i++) {
+            Monster monster = monsterManager.getMonsters().get(i);
+            if (monster.isAlive()) {
+                Rectangle monsterBox = new Rectangle(
+                        monster.getX(),
+                        monster.getY(),
+                        monster.getWidth(),
+                        monster.getHeight()
+                );
+
+                if (attackBox.intersects(monsterBox)) {
+                    try {
+                        output.writeUTF("HIT_MONSTER," + i + ",20"); // 20은 공격력
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
 
 
     @Override
     public void keyPressed(KeyEvent e) {
         pressedKeys.add(e.getKeyCode());
+
+        // 컨트롤 키로 공격
+        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastAttackTime >= ATTACK_COOLDOWN) {
+                attackMonster();
+                lastAttackTime = currentTime;
+            }
+        }
     }
 
     @Override
@@ -328,9 +419,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();  // 배경 이미지 업데이트
         backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();// 지형 이미지 업데이트
-        
-        
-        
+
+
+
         // 플레이어 위치 초기화
         player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
 
@@ -339,6 +430,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 새로운 배경음악 재생
         playCurrentMapMusic();
+
+        //몬스터 갱신
+        monsterManager.initializeMonsters(currentMapIndex);
 
         // 화면 갱신
         repaint();
