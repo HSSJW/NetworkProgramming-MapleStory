@@ -136,7 +136,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
             while (true) {
                 String message = input.readUTF();
-                System.out.println("Raw received message: " + message);  // 디버깅용
+
 
                 // 메시지 시작 부분 확인
                 if (message.contains("MONSTER_UPDATE")) {
@@ -176,7 +176,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             }
             repaint();
         } catch (Exception e) {
-            System.out.println("Error handling move message: " + message);
+
             e.printStackTrace();
         }
     }
@@ -186,41 +186,27 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             String monsterData = message.substring("MONSTER_UPDATE,".length());
             updateMonsterStates(monsterData);
         } catch (Exception e) {
-            System.out.println("Error handling monster update: " + message);
+
             e.printStackTrace();
         }
     }
 
     private void updateMonsterStates(String monsterData) {
         try {
-            System.out.println("Processing monster data: " + monsterData);
-
-            if (monsterData == null || monsterData.trim().isEmpty()) {
-                return;
-            }
-
             String[] monsters = monsterData.split(";");
             for (int i = 0; i < monsters.length && i < monsterManager.getMonsters().size(); i++) {
-                String monsterInfo = monsters[i].trim();
-                if (monsterInfo.isEmpty() || !monsterInfo.matches("\\d+,\\d+,\\d+,\\d+,\\d+,(true|false)")) {
-                    System.out.println("Invalid monster data format: " + monsterInfo);
-                    continue;
-                }
-
-                String[] data = monsterInfo.split(",");
+                String[] data = monsters[i].split(",");
                 Monster monster = monsterManager.getMonsters().get(i);
 
                 monster.setPosition(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
                 monster.setHp(Integer.parseInt(data[2]));
-                monster.setState(
-                        Monster.State.values()[Integer.parseInt(data[3])],
-                        Monster.Direction.values()[Integer.parseInt(data[4])]
-                );
+                monster.setState(data[3]);  // 문자열 상태 직접 설정
+                monster.setFacingRight(Boolean.parseBoolean(data[4]));
                 monster.setAlive(Boolean.parseBoolean(data[5]));
             }
             repaint();
         } catch (Exception e) {
-            System.out.println("Error updating monster states: " + e.getMessage());
+
             e.printStackTrace();
         }
     }
@@ -264,15 +250,15 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                 REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
 
         // 지형 그리기
-//        g2d.setColor(Color.GREEN);
-//        for (Rectangle rect : currentMap.getTerrain()) {
-//            g2d.fillRect(
-//                    rect.x,
-//                    rect.y,
-//                    rect.width,
-//                    rect.height
-//            );
-//        }
+        g2d.setColor(Color.GREEN);
+        for (Rectangle rect : currentMap.getTerrain()) {
+            g2d.fillRect(
+                    rect.x,
+                    rect.y,
+                    rect.width,
+                    rect.height
+            );
+        }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {
@@ -286,8 +272,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         }
 
         //몬스터 그리기
+
         for (Monster monster : monsterManager.getMonsters()) {
             if (monster.isAlive()) {
+
                 monster.paintMonster(g2d, this);
             }
         }

@@ -32,25 +32,24 @@ public class MapleServer {
     public MapleServer(int port) {
         this.port = port;
         this.monsterManager = new MonsterManager();
-        monsterManager.initializeMonsters(currentMapIndex);
 
         // 몬스터 업데이트 타이머 설정
-        monsterUpdateTimer = new Timer(16, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!clients.isEmpty()) {  // 클라이언트가 있을 때만 업데이트
-                    monsterManager.updateMonsters(maps.get(currentMapIndex));
-                    broadcastMonsterState();
-                }
+        monsterUpdateTimer = new Timer(16, e -> {
+            if (!clients.isEmpty()) {
+                // 현재 맵의 데이터를 명시적으로 전달
+                monsterManager.updateMonsters(maps.get(currentMapIndex));
+                broadcastMonsterState();
             }
         });
+
+        monsterManager.initializeMonsters(currentMapIndex);
     }
 
     private synchronized void broadcastMonsterState() {
         try {
             String monsterState = createMonsterStateMessage();
             // 디버깅을 위한 로그 추가
-            System.out.println("Broadcasting monster state: " + monsterState);
+//            System.out.println("Broadcasting monster state: " + monsterState);
 
             for (ClientHandler client : clients) {
                 if (client != null) {
@@ -120,21 +119,32 @@ public class MapleServer {
     private String createMonsterStateMessage() {
         StringBuilder message = new StringBuilder("MONSTER_UPDATE,");
         for (Monster monster : monsterManager.getMonsters()) {
-            // 각 몬스터 데이터 사이에 명확한 구분자 추가
-            message.append(String.format("%d,%d,%d,%d,%d,%b;",
+            message.append(String.format("%d,%d,%d,%s,%b,%b;",
                     monster.getX(),
                     monster.getY(),
                     monster.getHp(),
-                    monster.getCurrentState().ordinal(),
-                    monster.getCurrentDirection().ordinal(),
+                    monster.getCurrentState(),
+                    monster.isFacingRight(),
                     monster.isAlive()
             ));
         }
-        // 마지막 세미콜론 제거
         if (message.charAt(message.length() - 1) == ';') {
             message.setLength(message.length() - 1);
         }
         return message.toString();
+    }
+
+    private void handleMapChange(String data) {
+        try {
+            String[] parts = data.split(",");
+            currentMapIndex = Integer.parseInt(parts[1]);
+
+            // 맵 변경 시 몬스터 초기화하고 현재 맵 정보 전달
+            monsterManager.initializeMonsters(currentMapIndex);
+            broadcastMonsterState();
+        } catch (Exception e) {
+            System.out.println("Error handling map change: " + e.getMessage());
+        }
     }
 
     private class ClientHandler implements Runnable {
@@ -151,7 +161,19 @@ public class MapleServer {
             try (DataInputStream input = new DataInputStream(clientSocket.getInputStream())) {
                 while (isConnected) {
                     String inputLine = input.readUTF();
-                    if (inputLine.startsWith("MOVE")) {
+
+                    if (inputLine.startsWith("MAP_CHANGE")) {
+                        handleMapChange(inputLine);
+                    }
+                    else if (inputLine.startsWith("HIT_MONSTER")) {
+                        String[] data = inputLine.split(",");
+                        int monsterId = Integer.parseInt(data[1]);
+                        int damage = Integer.parseInt(data[2]);
+                        monsterManager.handleMonsterHit(monsterId, damage);
+                        broadcastMonsterState();
+                    }
+
+                    else if (inputLine.startsWith("MOVE")) {
                         for (ClientHandler client : clients) {
                             if (client != this) {
                                 client.send(inputLine);

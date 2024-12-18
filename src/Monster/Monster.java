@@ -1,122 +1,161 @@
 package Monster;
 
 import Map.MapData;
-
 import java.awt.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+
 public abstract class Monster {
-    protected int x, y; // 위치
-    protected int width, height; // 크기
-    protected Image currentImage; // 현재 이미지
-    protected boolean isAlive = true; // 생존 상태
+    protected int x, y;
+    protected int width, height;
+    protected Image currentImage;
+    protected boolean isAlive = true;
     protected int hp;
     protected int maxHp;
     protected boolean onGround = false;
     protected int verticalSpeed = 0;
     protected static final int GRAVITY = 2;
     protected Rectangle hitbox;
+    private int mapIndex;  // 몬스터가 속한 맵의 인덱스
 
 
+    // enum 대신 String으로 상태 관리
+    protected String currentState = "idle";
+    protected boolean facingRight = true;
+    protected boolean moving = false;
 
-    public enum State {
-        IDLE, MOVING, ATTACKING, DEAD, HIT
-    }
+    // 이미지 필드 추가
+    protected Image idleRightImage, idleLeftImage;
+    protected Image moveRightImage, moveLeftImage;
+    protected Image hitRightImage, hitLeftImage;
+    protected Image deadRightImage, deadLeftImage;
 
-    protected State currentState = State.IDLE;
-    protected Direction currentDirection = Direction.RIGHT;
-
-    public enum Direction {
-        LEFT, RIGHT
-    }
-
-    public Monster(int startX, int startY) {
+    public Monster(int startX, int startY, int mapIndex) {
         this.x = startX;
         this.y = startY;
+        this.mapIndex = mapIndex;
         this.hitbox = new Rectangle(x, y, width, height);
+        initializeImages();
     }
+
+    public int getMapIndex() {
+        return mapIndex;
+    }
+
+    protected abstract void initializeImages();
 
     public void update(MapData currentMap) {
         if (!isAlive) return;
 
         // 중력 적용
         if (!onGround) {
-            verticalSpeed += GRAVITY;
-            y += verticalSpeed;
+            if (verticalSpeed <= 25) {
+                verticalSpeed += GRAVITY;
+            }
         }
 
-        // 지형 충돌 검사
+        // 이전 위치 저장
+        int prevY = y;
+
+        // 위치 업데이트
+        y += verticalSpeed;
+
+        // 이전 바닥 상태 저장
+        boolean wasOnGround = onGround;
         onGround = false;
-        hitbox.setLocation(x, y);
 
-        for (Rectangle terrain : currentMap.getTerrain()) {
-            if (hitbox.intersects(terrain)) {
-                // 위에서 아래로 떨어지는 중 충돌
-                if (verticalSpeed > 0 && hitbox.y + hitbox.height - verticalSpeed <= terrain.y) {
-                    y = terrain.y - height;
-                    verticalSpeed = 0;
-                    onGround = true;
-                    break;
+        // 현재 맵의 지형 가져오기
+        CopyOnWriteArrayList<Rectangle> currentTerrain = currentMap.getTerrain();
+        Rectangle currentPlatform = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        // 현재 맵의 지형과 충돌 체크
+        for (Rectangle rect : currentTerrain) {
+            // 몬스터가 지형 위에 있고 좌우로 겹치는지 확인
+            if (x + width - 20 > rect.x && x + 20 < rect.x + rect.width) {
+                // 몬스터의 발 위치와 지형의 높이 차이 계산
+                int heightDifference = (y + height) - rect.y;
+
+                // 적절한 높이 범위 내에 있는 경우에만 처리
+                if (heightDifference >= 0 && heightDifference <= 30) {
+                    double distance = Math.abs(heightDifference);
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        currentPlatform = rect;
+                    }
                 }
             }
         }
 
-        // 현재 서있는 지형 찾기
-        if (onGround) {
-            boolean hasGroundAhead = false;
-            Rectangle currentTerrain = null;
+        // 지형과의 충돌 처리
+        if (currentPlatform != null) {
+            onGround = true;
+            y = currentPlatform.y - height;
+            verticalSpeed = 0;
 
-            // 현재 서있는 지형 찾기
-            for (Rectangle terrain : currentMap.getTerrain()) {
-                if (y + height == terrain.y &&
-                        x + width > terrain.x &&
-                        x < terrain.x + terrain.width) {
-                    currentTerrain = terrain;
-                    break;
-                }
-            }
-
-            if (currentTerrain != null) {
-                // 진행 방향의 지형 끝 감지
-                if (currentDirection == Direction.RIGHT) {
-                    // 오른쪽으로 이동 중일 때
-                    if (x + width + 5 >= currentTerrain.x + currentTerrain.width) {
-                        // 지형 끝에 도달하면 방향 전환
-                        currentDirection = Direction.LEFT;
-                        setState(currentState, Direction.LEFT);
-                    }
+            // 지형 위에서의 좌우 이동
+            int moveSpeed = 2;
+            if (facingRight) {
+                // 오른쪽 끝 도달 확인
+                if (x + width + moveSpeed >= currentPlatform.x + currentPlatform.width - 20) {
+                    facingRight = false;
+                    setState("move");
                 } else {
-                    // 왼쪽으로 이동 중일 때
-                    if (x - 5 <= currentTerrain.x) {
-                        // 지형 끝에 도달하면 방향 전환
-                        currentDirection = Direction.RIGHT;
-                        setState(currentState, Direction.RIGHT);
-                    }
+                    x += moveSpeed;
+                }
+            } else {
+                // 왼쪽 끝 도달 확인
+                if (x - moveSpeed <= currentPlatform.x + 20) {
+                    facingRight = true;
+                    setState("move");
+                } else {
+                    x -= moveSpeed;
                 }
             }
+
+            moving = true;
+        } else {
+            // 지형을 찾지 못했을 때 낙하 상태 유지
+            moving = false;
         }
 
-        updateState();
+        // 상태 업데이트
+        setState(moving ? "move" : "idle");
+
+        // 히트박스 업데이트
+        hitbox.setLocation(x, y);
     }
 
-    protected abstract void updateState();
-    protected abstract Image getMonsterImage(State state, Direction direction);
+    public void setState(String state) {
+        currentState = state;
+        updateImage();
+    }
+
+    protected void updateImage() {
+        switch (currentState) {
+            case "idle":
+                currentImage = facingRight ? idleRightImage : idleLeftImage;
+                break;
+            case "move":
+                currentImage = facingRight ? moveRightImage : moveLeftImage;
+                break;
+            case "hit":
+                currentImage = facingRight ? hitRightImage : hitLeftImage;
+                break;
+            case "dead":
+                currentImage = facingRight ? deadRightImage : deadLeftImage;
+                break;
+        }
+    }
 
     public void takeDamage(int damage) {
         hp -= damage;
-        setState(State.HIT, currentDirection);
+        setState("hit");
         if (hp <= 0) {
             isAlive = false;
-            setState(State.DEAD, currentDirection);
+            setState("dead");
         }
     }
-
-    public void setState(State state, Direction direction) {
-        currentState = state;
-        currentDirection = direction;
-        currentImage = getMonsterImage(state, direction);
-    }
-
 
     public void paintMonster(Graphics g, Component observer) {
         if (currentImage != null) {
@@ -147,20 +186,32 @@ public abstract class Monster {
     public int getHeight() { return height; }
     public int getHp() { return hp; }
     public boolean isAlive() { return isAlive; }
-    public State getCurrentState() { return currentState; }
-    public Direction getCurrentDirection() { return currentDirection; }
+    public String getCurrentState() { return currentState; }
+    public boolean isFacingRight() { return facingRight; }
 
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
         hitbox.setLocation(x, y);
     }
-
     public void setHp(int hp) {
         this.hp = hp;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            isAlive = false;
+            setState("dead");
+        }
+    }
+
+    public void setFacingRight(boolean facingRight) {
+        this.facingRight = facingRight;
+        updateImage(); // 방향이 바뀌면 이미지도 업데이트
     }
 
     public void setAlive(boolean alive) {
-        isAlive = alive;
+        this.isAlive = alive;
+        if (!alive) {
+            setState("dead");
+        }
     }
 }
