@@ -33,32 +33,37 @@ public class MonsterManager {
         initializeMapMonsters();
     }
 
+
+
     private void initializeMapMonsters() {
-        // Map1의 몬스터 스폰 위치
+        mapMonsters = new HashMap<>();
+
+        // Map1 (index 0)의 몬스터 스폰 데이터
         List<MonsterSpawnData> map1Monsters = Arrays.asList(
-                new MonsterSpawnData(MushRoom.class, 200, 535, 0),   // mapIndex = 0
+                new MonsterSpawnData(MushRoom.class, 200, 535, 0),
                 new MonsterSpawnData(MushRoom.class, 700, 535, 0),
                 new MonsterSpawnData(MushRoom.class, 1200, 535, 0),
                 new MonsterSpawnData(MushRoom.class, 600, 395, 0)
         );
         mapMonsters.put(0, map1Monsters);
 
-        // Map2의 몬스터 스폰 위치
+        // Map2 (index 1)의 몬스터 스폰 데이터 - Map2의 지형에 맞게 조정
         List<MonsterSpawnData> map2Monsters = Arrays.asList(
-                new MonsterSpawnData(MushRoom.class, 150, 580, 1),    // mapIndex = 1
+                new MonsterSpawnData(MushRoom.class, 150, 580, 1),    // 1층
+                new MonsterSpawnData(MushRoom.class, 500, 580, 1),
                 new MonsterSpawnData(MushRoom.class, 1000, 580, 1),
-                new MonsterSpawnData(MushRoom.class, 400, 410, 1),
+                new MonsterSpawnData(MushRoom.class, 400, 410, 1),    // 2층
                 new MonsterSpawnData(MushRoom.class, 900, 410, 1),
-                new MonsterSpawnData(MushRoom.class, 300, 230, 1),
-                new MonsterSpawnData(MushRoom.class, 800, 230, 1)
+                new MonsterSpawnData(MushRoom.class, 300, 230, 1)     // 3층
         );
         mapMonsters.put(1, map2Monsters);
 
-        // Map3의 몬스터 스폰 위치
+        // Map3 (index 2)의 몬스터 스폰 데이터 - Map3의 지형에 맞게 조정
         List<MonsterSpawnData> map3Monsters = Arrays.asList(
-                new MonsterSpawnData(MushRoom.class, 100, 513, 2),    // mapIndex = 2
+                new MonsterSpawnData(MushRoom.class, 100, 513, 2),    // 바닥
+                new MonsterSpawnData(MushRoom.class, 500, 513, 2),
                 new MonsterSpawnData(MushRoom.class, 900, 513, 2),
-                new MonsterSpawnData(MushRoom.class, 420, 470, 2),
+                new MonsterSpawnData(MushRoom.class, 420, 470, 2),    // 블록 타워
                 new MonsterSpawnData(MushRoom.class, 440, 390, 2),
                 new MonsterSpawnData(MushRoom.class, 480, 310, 2)
         );
@@ -67,33 +72,46 @@ public class MonsterManager {
 
 
     public void initializeMonsters(int mapIndex) {
-        monsters.clear();
+        // 디버깅을 위한 로그 추가
+        System.out.println("Initializing monsters for map " + mapIndex);
+
+        monsters.clear();  // 기존 몬스터 제거
         List<MonsterSpawnData> spawnDataList = mapMonsters.get(mapIndex);
 
         if (spawnDataList != null) {
+            System.out.println("Found " + spawnDataList.size() + " monsters to spawn");
+
             for (MonsterSpawnData spawnData : spawnDataList) {
                 try {
-                    // 생성자에 맵 인덱스 전달
                     Constructor<?> constructor = spawnData.monsterClass.getDeclaredConstructor(
                             int.class, int.class, int.class);
                     Monster monster = (Monster) constructor.newInstance(
                             spawnData.x, spawnData.y, mapIndex);
                     monsters.add(monster);
+
+                    // 디버깅 로그
+                    System.out.println("Spawned monster at (" + spawnData.x + ", " +
+                            spawnData.y + ") for map " + mapIndex);
                 } catch (Exception e) {
+                    System.err.println("Error spawning monster: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
+        } else {
+            System.err.println("No spawn data found for map " + mapIndex);
         }
     }
 
     public void updateMonsters(MapData currentMap) {
         for (Monster monster : monsters) {
             if (monster.isAlive()) {
-                // 몬스터의 맵 인덱스에 해당하는 맵 데이터로 업데이트
-                monster.update(maps.get(monster.getMapIndex()));
+                // 몬스터의 맵 인덱스에 해당하는 맵 데이터를 가져와서 업데이트
+                MapData monsterMap = maps.get(monster.getMapIndex());
+                monster.update(monsterMap);  // 각 몬스터는 자신이 속한 맵의 데이터로 업데이트
             }
         }
     }
+
     // 몬스터가 Map1의 범위에 있는지 확인
     private boolean isMonsterInMap1Bounds(Monster monster) {
         return monster.getX() >= 0 && monster.getX() < 500;  // 예시 범위

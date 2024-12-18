@@ -33,11 +33,18 @@ public class MapleServer {
         this.port = port;
         this.monsterManager = new MonsterManager();
 
-        // 몬스터 업데이트 타이머 설정
+        // 몬스터 업데이트 타이머 수정
         monsterUpdateTimer = new Timer(16, e -> {
             if (!clients.isEmpty()) {
-                // 현재 맵의 데이터를 명시적으로 전달
-                monsterManager.updateMonsters(maps.get(currentMapIndex));
+                // 각 몬스터를 자신의 맵으로 업데이트하도록 수정
+                for (Monster monster : monsterManager.getMonsters()) {
+                    if (monster.isAlive()) {
+                        // 몬스터의 맵 인덱스에 해당하는 맵 데이터를 가져와서 업데이트
+                        MapData monsterMap = maps.get(monster.getMapIndex());
+                        System.out.println(monster.getMapIndex());
+                        monster.update(monsterMap);
+                    }
+                }
                 broadcastMonsterState();
             }
         });

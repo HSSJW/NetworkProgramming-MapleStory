@@ -194,19 +194,35 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private void updateMonsterStates(String monsterData) {
         try {
             String[] monsters = monsterData.split(";");
-            for (int i = 0; i < monsters.length && i < monsterManager.getMonsters().size(); i++) {
-                String[] data = monsters[i].split(",");
-                Monster monster = monsterManager.getMonsters().get(i);
+            // monsterManager의 monsters 리스트 크기 갱신
+            CopyOnWriteArrayList<Monster> currentMonsters = monsterManager.getMonsters();
 
+            // 각 몬스터 데이터에 대해
+            for (int i = 0; i < monsters.length; i++) {
+                String[] data = monsters[i].split(",");
+
+                // 현재 인덱스가 몬스터 리스트 범위를 벗어나면 건너뛰기
+                if (i >= currentMonsters.size()) {
+                    System.out.println("Warning: Received more monster data than available monsters");
+                    continue;
+                }
+
+                Monster monster = currentMonsters.get(i);
+
+                // 몬스터 상태 업데이트
                 monster.setPosition(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
                 monster.setHp(Integer.parseInt(data[2]));
-                monster.setState(data[3]);  // 문자열 상태 직접 설정
+                monster.setState(data[3]);
                 monster.setFacingRight(Boolean.parseBoolean(data[4]));
                 monster.setAlive(Boolean.parseBoolean(data[5]));
             }
+
+            // 디버깅을 위한 로그
+            System.out.println("Updated " + monsters.length + " monsters out of " + currentMonsters.size() + " total monsters");
+
             repaint();
         } catch (Exception e) {
-
+            System.err.println("Error updating monster states: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -400,15 +416,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     //플레이어가 포탈위에 있는지 판단하는 메서드
     // 포탈을 통해 다음 맵으로 이동
     private void nextMap(Portal portal) {
-
-        currentMapIndex = portal.getNextMapIndex(); // 포탈에 설정된 다음 맵 인덱스 가져오기
+        currentMapIndex = portal.getNextMapIndex();
         MapData currentMap = getCurrentMap();
 
-
-        baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();  // 배경 이미지 업데이트
-        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();// 지형 이미지 업데이트
-
-
+        baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();
+        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
 
         // 플레이어 위치 초기화
         player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
@@ -418,6 +430,13 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         // 새로운 배경음악 재생
         playCurrentMapMusic();
+
+        // 서버에 맵 변경 알림
+        try {
+            output.writeUTF("MAP_CHANGE," + currentMapIndex);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //몬스터 갱신
         monsterManager.initializeMonsters(currentMapIndex);

@@ -44,8 +44,28 @@ public abstract class Monster {
 
     protected abstract void initializeImages();
 
+
+    // Monster 클래스에 새로운 디버그 메서드 추가
+    public void printDebugInfo() {
+        System.out.println("=== Monster State ===");
+        System.out.println("Position: (" + x + ", " + y + ")");
+        System.out.println("Map Index: " + mapIndex);
+        System.out.println("Is Alive: " + isAlive);
+        System.out.println("Current State: " + currentState);
+        System.out.println("==================");
+    }
+
     public void update(MapData currentMap) {
         if (!isAlive) return;
+
+        // 디버깅 정보 출력
+//        System.out.println("Monster Debug Info:");
+//        System.out.println("Monster Position: (" + x + ", " + y + ")");
+//        System.out.println("Monster Map Index: " + mapIndex);
+//        System.out.println("Current Map Terrain Count: " + currentMap.getTerrain().size());
+//        System.out.println("First Terrain Rectangle: " + currentMap.getTerrain().get(0));
+
+
 
         // 중력 적용
         if (!onGround) {
@@ -64,13 +84,13 @@ public abstract class Monster {
         boolean wasOnGround = onGround;
         onGround = false;
 
-        // 현재 맵의 지형 가져오기
-        CopyOnWriteArrayList<Rectangle> currentTerrain = currentMap.getTerrain();
+        // 몬스터가 속한 맵의 지형 가져오기
+        CopyOnWriteArrayList<Rectangle> mapTerrain = currentMap.getTerrain();
         Rectangle currentPlatform = null;
         double closestDistance = Double.MAX_VALUE;
 
-        // 현재 맵의 지형과 충돌 체크
-        for (Rectangle rect : currentTerrain) {
+        // 해당 맵의 지형과 충돌 체크
+        for (Rectangle rect : mapTerrain) {
             // 몬스터가 지형 위에 있고 좌우로 겹치는지 확인
             if (x + width - 20 > rect.x && x + 20 < rect.x + rect.width) {
                 // 몬스터의 발 위치와 지형의 높이 차이 계산
@@ -112,10 +132,8 @@ public abstract class Monster {
                     x -= moveSpeed;
                 }
             }
-
             moving = true;
         } else {
-            // 지형을 찾지 못했을 때 낙하 상태 유지
             moving = false;
         }
 
