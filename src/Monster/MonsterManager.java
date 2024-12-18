@@ -72,14 +72,13 @@ public class MonsterManager {
 
 
     public void initializeMonsters(int mapIndex) {
-        // 디버깅을 위한 로그 추가
-        System.out.println("Initializing monsters for map " + mapIndex);
+
 
         monsters.clear();  // 기존 몬스터 제거
         List<MonsterSpawnData> spawnDataList = mapMonsters.get(mapIndex);
 
         if (spawnDataList != null) {
-            System.out.println("Found " + spawnDataList.size() + " monsters to spawn");
+
 
             for (MonsterSpawnData spawnData : spawnDataList) {
                 try {
@@ -89,9 +88,7 @@ public class MonsterManager {
                             spawnData.x, spawnData.y, mapIndex);
                     monsters.add(monster);
 
-                    // 디버깅 로그
-                    System.out.println("Spawned monster at (" + spawnData.x + ", " +
-                            spawnData.y + ") for map " + mapIndex);
+
                 } catch (Exception e) {
                     System.err.println("Error spawning monster: " + e.getMessage());
                     e.printStackTrace();
@@ -112,20 +109,6 @@ public class MonsterManager {
         }
     }
 
-    // 몬스터가 Map1의 범위에 있는지 확인
-    private boolean isMonsterInMap1Bounds(Monster monster) {
-        return monster.getX() >= 0 && monster.getX() < 500;  // 예시 범위
-    }
-
-    // 몬스터가 Map2의 범위에 있는지 확인
-    private boolean isMonsterInMap2Bounds(Monster monster) {
-        return monster.getX() >= 500 && monster.getX() < 1000;  // 예시 범위
-    }
-
-    // 몬스터가 Map3의 범위에 있는지 확인
-    private boolean isMonsterInMap3Bounds(Monster monster) {
-        return monster.getX() >= 1000;  // 예시 범위
-    }
 
     public CopyOnWriteArrayList<Monster> getMonsters() {
         return monsters;

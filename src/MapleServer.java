@@ -41,7 +41,7 @@ public class MapleServer {
                     if (monster.isAlive()) {
                         // 몬스터의 맵 인덱스에 해당하는 맵 데이터를 가져와서 업데이트
                         MapData monsterMap = maps.get(monster.getMapIndex());
-                        System.out.println(monster.getMapIndex());
+
                         monster.update(monsterMap);
                     }
                 }

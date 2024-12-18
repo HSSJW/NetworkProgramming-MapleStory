@@ -203,7 +203,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
                 // 현재 인덱스가 몬스터 리스트 범위를 벗어나면 건너뛰기
                 if (i >= currentMonsters.size()) {
-                    System.out.println("Warning: Received more monster data than available monsters");
+
                     continue;
                 }
 
@@ -217,8 +217,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                 monster.setAlive(Boolean.parseBoolean(data[5]));
             }
 
-            // 디버깅을 위한 로그
-            System.out.println("Updated " + monsters.length + " monsters out of " + currentMonsters.size() + " total monsters");
 
             repaint();
         } catch (Exception e) {

@@ -45,26 +45,8 @@ public abstract class Monster {
     protected abstract void initializeImages();
 
 
-    // Monster 클래스에 새로운 디버그 메서드 추가
-    public void printDebugInfo() {
-        System.out.println("=== Monster State ===");
-        System.out.println("Position: (" + x + ", " + y + ")");
-        System.out.println("Map Index: " + mapIndex);
-        System.out.println("Is Alive: " + isAlive);
-        System.out.println("Current State: " + currentState);
-        System.out.println("==================");
-    }
-
     public void update(MapData currentMap) {
         if (!isAlive) return;
-
-        // 디버깅 정보 출력
-//        System.out.println("Monster Debug Info:");
-//        System.out.println("Monster Position: (" + x + ", " + y + ")");
-//        System.out.println("Monster Map Index: " + mapIndex);
-//        System.out.println("Current Map Terrain Count: " + currentMap.getTerrain().size());
-//        System.out.println("First Terrain Rectangle: " + currentMap.getTerrain().get(0));
-
 
 
         // 중력 적용
