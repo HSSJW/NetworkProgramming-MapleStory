@@ -14,7 +14,7 @@ public abstract class QSkill extends Skill {
 
     public QSkill(Player owner) {
         super("Q_Skill", 30, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
-        System.out.println("QSkill constructor called");
+
         loadSkillImages(); // 명시적으로 이미지 로드 호출
     }
 
@@ -29,7 +29,6 @@ public abstract class QSkill extends Skill {
                     owner.getX() + owner.getWidth() :
                     owner.getX() - SKILL_WIDTH;
             hitbox = new Rectangle(hitboxX, owner.getY(), SKILL_WIDTH, SKILL_HEIGHT);
-            System.out.println("Skill activated, will last for " + SKILL_DURATION + "ms");
         }
     }
 
@@ -39,20 +38,17 @@ public abstract class QSkill extends Skill {
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - lastUseTime;
 
-            System.out.println("Skill elapsed time: " + elapsedTime + "ms");
-
             // 스킬 지속 시간 체크
             if (elapsedTime >= duration) {
                 isActive = false;
-                System.out.println("Skill deactivated due to duration end");
                 return;
             }
 
             // hitbox 업데이트
-            int hitboxX = facingRight ?
-                    owner.getX() + owner.getWidth() :
-                    owner.getX() - SKILL_WIDTH;
-            hitbox.setLocation(hitboxX, owner.getY());
+//            int hitboxX = facingRight ?
+//                    owner.getX() + owner.getWidth() :
+//                    owner.getX() - SKILL_WIDTH;
+//            hitbox.setLocation(hitboxX, owner.getY());
         }
     }
 
@@ -62,20 +58,11 @@ public abstract class QSkill extends Skill {
             // 스킬 이미지 먼저 그리기
             Image currentGif = facingRight ? rightImage : leftImage;
             if (currentGif != null && currentGif != null) {
-                System.out.println("Drawing gif image"); // 디버깅용
                 g2d.drawImage(currentGif,
                         hitbox.x, hitbox.y,
                         SKILL_WIDTH, SKILL_HEIGHT,
                         observer);
             }
-
-            // hitbox 시각화 (디버깅용)
-            g2d.setColor(new Color(255, 0, 0, 30));  // 투명도를 더 낮춤
-            g2d.fillRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
-
-            // hitbox 테두리 (디버깅용)
-            g2d.setColor(new Color(255, 255, 255, 100));  // 투명한 흰색
-            g2d.drawRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
         }
     }
 
@@ -84,6 +71,7 @@ public abstract class QSkill extends Skill {
         return currentGif != null && currentGif.getImageObserver() != null;
     }
 
+    //이미지 로딩 함수
     @Override
     protected abstract void loadSkillImages();
 

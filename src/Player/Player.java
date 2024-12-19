@@ -56,21 +56,11 @@ public abstract class Player {
         // 캐릭터 그리기
         g2d.drawImage(currentImage, x, y, width, height, observer);
 
-        // 디버깅을 위한 정보 출력
-        System.out.println("Player position: " + x + ", " + y);
-        System.out.println("Player size: " + width + "x" + height);
-
         // 스킬 상태 확인 및 그리기
         if (qSkill != null) {
-            System.out.println("QSkill exists");
             if (qSkill.isActive()) {
                 System.out.println("QSkill is active, drawing...");
-                // 디버깅용 - 스킬 영역 표시
-                g2d.setColor(new Color(255, 0, 0, 100));
-                Rectangle hitbox = qSkill.getHitbox();
-                if (hitbox != null) {
-                    g2d.fillRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
-                }
+
                 qSkill.draw(g2d, observer);
             }
         }
