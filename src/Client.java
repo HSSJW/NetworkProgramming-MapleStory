@@ -283,10 +283,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 플레이어와 스킬 그리기
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 
-        // 디버깅용 - 플레이어 위치에 사각형 그리기
-        g2d.setColor(Color.YELLOW);
-        g2d.drawRect(player1.getX(), player1.getY(), player1.getWidth(), player1.getHeight());
-
         player1.draw(g2d, this);
         if (opponentConnected && opponentMapIndex == currentMapIndex) {
             player2.draw(g2d, this);
@@ -468,7 +464,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
 
         // 상대방도 같은 맵으로 업데이트
-        opponentMapIndex = currentMapIndex;
+//        opponentMapIndex = currentMapIndex;
 
         // 새로운 배경음악 재생
         playCurrentMapMusic();
