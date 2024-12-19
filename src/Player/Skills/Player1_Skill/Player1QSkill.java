@@ -17,31 +17,16 @@ public class Player1QSkill extends QSkill {
 
     @Override
     protected void loadSkillImages() {
-
         try {
+            rightImage = new ImageIcon("images/Player/Player1/skill/player1-q-right-ezgif.com-resize.gif").getImage();
+            leftImage = new ImageIcon("images/Player/Player1/skill/player1-q-left-ezgif.com-resize.gif").getImage();
 
-
-
-            rightImage = new ImageIcon("images/Player/Player1/skill/player1-q-right.gif").getImage();
-            leftImage =  new ImageIcon("images/Player/Player1/skill/player1-q-left.gif").getImage();
-
-            // MediaTracker를 사용하여 이미지 로드 완료 대기
-            MediaTracker tracker = new MediaTracker(new Canvas());
-            tracker.addImage(rightImage, 0);
-            tracker.addImage(leftImage, 1);
-
-
-
-            // 이미지 크기 조정
-            Image scaledRight = rightImage.getScaledInstance(SKILL_WIDTH, SKILL_HEIGHT, Image.SCALE_SMOOTH);
-            Image scaledLeft = leftImage.getScaledInstance(SKILL_WIDTH, SKILL_HEIGHT, Image.SCALE_SMOOTH);
-
-
+            // 오른쪽 이미지 기준으로 스킬 크기 설정
+            updateSkillDimensions(rightImage);
 
         } catch (Exception e) {
             System.out.println("Error loading skill images: " + e.getMessage());
             e.printStackTrace();
-
         }
     }
 

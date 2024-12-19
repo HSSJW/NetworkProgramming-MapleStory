@@ -8,8 +8,8 @@ import java.awt.*;
 
 public abstract class QSkill extends Skill {
     // 원본 이미지 크기에 맞게 수정
-    protected static final int SKILL_WIDTH = 885;
-    protected static final int SKILL_HEIGHT = 279;
+    protected int skillWidth;  // 동적 크기를 위해 변경
+    protected int skillHeight; // 동적 크기를 위해 변경
     private static final int SKILL_DURATION = 2000; // 1초로 증가
 
     public QSkill(Player owner) {
@@ -24,11 +24,11 @@ public abstract class QSkill extends Skill {
             this.facingRight = facingRight;
             isActive = true;
             lastUseTime = System.currentTimeMillis();
-            // hitbox 초기화
+            // hitbox 초기화 - 실제 이미지 크기 사용
             int hitboxX = facingRight ?
                     owner.getX() + owner.getWidth() :
-                    owner.getX() - SKILL_WIDTH;
-            hitbox = new Rectangle(hitboxX, owner.getY(), SKILL_WIDTH, SKILL_HEIGHT);
+                    owner.getX() - skillWidth;
+            hitbox = new Rectangle(hitboxX, owner.getY(), skillWidth, skillHeight);
         }
     }
 
@@ -55,21 +55,38 @@ public abstract class QSkill extends Skill {
     @Override
     public void draw(Graphics2D g2d, Component observer) {
         if (isActive && hitbox != null) {
-            // 스킬 이미지 먼저 그리기
             Image currentGif = facingRight ? rightImage : leftImage;
-            if (currentGif != null && currentGif != null) {
+            if (currentGif != null) {
                 g2d.drawImage(currentGif,
                         hitbox.x, hitbox.y,
-                        SKILL_WIDTH, SKILL_HEIGHT,
+                        skillWidth, skillHeight,  // 동적 크기 사용
                         observer);
             }
         }
     }
 
-    protected boolean isGifPlaying() {
-        ImageIcon currentGif = facingRight ? gifRight : gifLeft;
-        return currentGif != null && currentGif.getImageObserver() != null;
+    // 이미지 크기를 가져오는 유틸리티 메소드 추가
+    protected void updateSkillDimensions(Image image) {
+        if (image != null) {
+            // 이미지가 완전히 로드될 때까지 대기
+            MediaTracker tracker = new MediaTracker(new Container());
+            tracker.addImage(image, 0);
+            try {
+                tracker.waitForID(0);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            skillWidth = image.getWidth(null);
+            skillHeight = image.getHeight(null);
+        }
     }
+    
+    //gif가 재생중인지 판별
+//    protected boolean isGifPlaying() {
+//        ImageIcon currentGif = facingRight ? gifRight : gifLeft;
+//        return currentGif != null && currentGif.getImageObserver() != null;
+//    }
 
     //이미지 로딩 함수
     @Override
