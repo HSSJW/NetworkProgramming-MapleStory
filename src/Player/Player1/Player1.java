@@ -1,6 +1,9 @@
 package Player.Player1;
 
 import Player.Player;
+import Player.Skills.Player1_Skill.Player1ESkill;
+import Player.Skills.Player1_Skill.Player1QSkill;
+import Player.Skills.Player1_Skill.Player1WSkill;
 
 import javax.swing.*;
 
@@ -21,5 +24,18 @@ public class Player1 extends Player {
         hitRightImage = new ImageIcon("images/Player/Player1/player_hit_right.png").getImage();
         hitLeftImage = new ImageIcon("images/Player/Player1/player_hit_left.png").getImage();
 
+    }
+
+    @Override
+    protected void initializeSkills() {
+        System.out.println("Initializing Player1 skills"); // 디버깅용
+        qSkill = new Player1QSkill(this);
+        wSkill = new Player1WSkill(this);
+        eSkill = new Player1ESkill(this);
+
+        // 스킬이 제대로 초기화되었는지 확인
+        if (qSkill != null) {
+            System.out.println("Q skill initialized successfully"); // 디버깅용
+        }
     }
 }

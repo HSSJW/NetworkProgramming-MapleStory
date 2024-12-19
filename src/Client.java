@@ -10,10 +10,10 @@ import Sound.AudioPlayer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.net.Socket;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -242,6 +242,14 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
+        // 렌더링 품질 설정
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        // 현재 상태 저장
+        AffineTransform originalTransform = g2d.getTransform();
+        Composite originalComposite = g2d.getComposite();
+
         // 현재 패널 크기 가져오기
         int currentWidth = getWidth();
         int currentHeight = getHeight();
@@ -266,12 +274,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 지형 그리기
         g2d.setColor(Color.GREEN);
         for (Rectangle rect : currentMap.getTerrain()) {
-            g2d.fillRect(
-                    rect.x,
-                    rect.y,
-                    rect.width,
-                    rect.height
-            );
+            g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
         }
 
         // 포탈 그리기
@@ -279,23 +282,31 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             portal.draw(g2d, this);
         }
 
-        // 플레이어 그리기
+        // 몬스터 그리기
+        for (Monster monster : monsterManager.getMonsters()) {
+            if (monster.isAlive()) {
+                monster.paintMonster(g2d, this);
+            }
+        }
+
+        // 플레이어와 스킬 그리기
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+
+        // 디버깅용 - 플레이어 위치에 사각형 그리기
+        g2d.setColor(Color.YELLOW);
+        g2d.drawRect(player1.getX(), player1.getY(), player1.getWidth(), player1.getHeight());
+
         player1.draw(g2d, this);
         if (opponentConnected && opponentMapIndex == currentMapIndex) {
             player2.draw(g2d, this);
         }
 
-        //몬스터 그리기
-
-        for (Monster monster : monsterManager.getMonsters()) {
-            if (monster.isAlive()) {
-
-                monster.paintMonster(g2d, this);
-            }
-        }
-
         // UI 요소 그리기
         drawUI(g2d);
+
+        // 원래 상태로 복원
+        g2d.setTransform(originalTransform);
+        g2d.setComposite(originalComposite);
     }
 
 
@@ -350,6 +361,13 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 현재 맵 객체를 그대로 전달
         MapData currentMap = getCurrentMap();
         player1.update(currentMap, mapWidth, mapHeight);
+
+        // 스킬 업데이트 추가
+        player1.updateSkills();  // Player 클래스에 이 메서드 추가 필요
+        if (player2 != null) {
+            player2.updateSkills();
+        }
+
         sendPosition();
         repaint();
     }
@@ -391,13 +409,20 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         pressedKeys.add(e.getKeyCode());
 
-        // 컨트롤 키로 공격
-        if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastAttackTime >= ATTACK_COOLDOWN) {
-                attackMonster();
-                lastAttackTime = currentTime;
-            }
+        // 스킬 키 입력 처리
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_Q:
+                player1.useQSkill();
+                sendSkillUse("Q");
+                break;
+            case KeyEvent.VK_W:
+                player1.useWSkill();
+                sendSkillUse("W");
+                break;
+            case KeyEvent.VK_E:
+                player1.useESkill();
+                sendSkillUse("E");
+                break;
         }
     }
 
@@ -409,6 +434,51 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
         // 사용하지 않음
+    }
+
+    // 스킬 사용 메시지 전송
+    private void sendSkillUse(String skillType) {
+        try {
+            String message = String.format("SKILL,%d,%s,%d,%d,%b",
+                    playerID,
+                    skillType,
+                    player1.getX(),
+                    player1.getY(),
+                    player1.isFacingRight()
+            );
+            output.writeUTF(message);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // 스킬 메시지 수신 처리
+    private void handleSkillMessage(String message) {
+        try {
+            String[] data = message.split(",");
+            int id = Integer.parseInt(data[1]);
+            String skillType = data[2];
+            int x = Integer.parseInt(data[3]);
+            int y = Integer.parseInt(data[4]);
+            boolean facingRight = Boolean.parseBoolean(data[5]);
+
+            // 상대방의 스킬 사용 처리
+            if (id != playerID) {
+                switch (skillType) {
+                    case "Q":
+                        player2.useQSkill();
+                        break;
+                    case "W":
+                        player2.useWSkill();
+                        break;
+                    case "E":
+                        player2.useESkill();
+                        break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     //플레이어가 포탈위에 있는지 판단하는 메서드

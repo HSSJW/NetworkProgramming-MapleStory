@@ -1,9 +1,12 @@
 package Player;
 
 import Map.MapData;
+import Player.Skills.AbstractSkill.ESkill;
+import Player.Skills.AbstractSkill.QSkill;
+import Player.Skills.AbstractSkill.WSkill;
 
-import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 
 public abstract class Player {
     protected int id; // 플레이어 ID
@@ -23,8 +26,11 @@ public abstract class Player {
     protected Image hitRightImage, hitLeftImage;
     protected Image currentImage; // 현재 상태의 이미지
 
-    protected final int MAX_FALL_SPEED = 30; // 최대 낙하 속도 제한
-    protected final int COLLISION_CHECK_STEPS = 4; // 충돌 검사 단계 수
+
+    //스킬관련
+    protected QSkill qSkill;
+    protected WSkill wSkill;
+    protected ESkill eSkill;
 
 
     public Player(int id, int startX, int startY) {
@@ -33,17 +39,91 @@ public abstract class Player {
         this.y = startY;
 
         initializeImages(); // 각 플레이어별 이미지 초기화
+        initializeSkills(); // 스킬 초기화 추가
 
         this.currentImage = standRightImage;
         this.width = currentImage.getWidth(null);
         this.height = currentImage.getHeight(null);
+
     }
 
     // 각 플레이어별 이미지를 초기화하는 추상 메서드
     protected abstract void initializeImages();
     // 플레이어 그리기
-    public void draw(Graphics g, Component observer) {
-        g.drawImage(currentImage, x, y, width, height, observer);
+
+
+    public void draw(Graphics2D g2d, Component observer) {
+        // 캐릭터 그리기
+        g2d.drawImage(currentImage, x, y, width, height, observer);
+
+        // 디버깅을 위한 정보 출력
+        System.out.println("Player position: " + x + ", " + y);
+        System.out.println("Player size: " + width + "x" + height);
+
+        // 스킬 상태 확인 및 그리기
+        if (qSkill != null) {
+            System.out.println("QSkill exists");
+            if (qSkill.isActive()) {
+                System.out.println("QSkill is active, drawing...");
+                // 디버깅용 - 스킬 영역 표시
+                g2d.setColor(new Color(255, 0, 0, 100));
+                Rectangle hitbox = qSkill.getHitbox();
+                if (hitbox != null) {
+                    g2d.fillRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+                }
+                qSkill.draw(g2d, observer);
+            }
+        }
+
+        // 다른 스킬들도 마찬가지로 처리
+        if (wSkill != null && wSkill.isActive()) {
+            wSkill.draw(g2d, observer);
+        }
+        if (eSkill != null && eSkill.isActive()) {
+            eSkill.draw(g2d, observer);
+        }
+    }
+
+    // 디버깅을 위한 메서드 추가
+    public boolean isQSkillActive() {
+        return qSkill != null && qSkill.isActive();
+    }
+
+    public void updateSkills() {
+        if (qSkill != null && qSkill.isActive()) qSkill.update();
+        if (wSkill != null && wSkill.isActive()) wSkill.update();
+        if (eSkill != null && eSkill.isActive()) eSkill.update();
+    }
+
+// 스킬 초기화를 위한 추상 메서드
+    protected abstract void initializeSkills();
+
+    // 스킬 사용 메서드
+    public void useQSkill() {
+        if (qSkill.canUse()) {
+            System.out.println("Q스킬 실행");
+            qSkill.activate(facingRight);
+            setState("skill_q");
+        }
+    }
+
+    public void useWSkill() {
+        if (wSkill.canUse()) {
+            wSkill.activate(facingRight);
+            setState("skill_w");
+        }
+    }
+
+    public void useESkill() {
+        if (eSkill.canUse()) {
+            eSkill.activate(facingRight);
+            setState("skill_e");
+        }
+    }
+
+    //보고있는 방향 리턴 true >> 오른족 false >> 왼쪽
+    public boolean isFacingRight() {
+        return facingRight;
     }
 
     // 플레이어 이동

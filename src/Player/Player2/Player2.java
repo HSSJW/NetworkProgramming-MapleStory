@@ -1,6 +1,9 @@
 package Player.Player2;
 
 import Player.Player;
+import Player.Skills.Player2_Skill.Player2ESkill;
+import Player.Skills.Player2_Skill.Player2QSkill;
+import Player.Skills.Player2_Skill.Player2WSkill;
 
 import javax.swing.*;
 
@@ -21,5 +24,12 @@ public class Player2 extends Player {
         hitRightImage = new ImageIcon("images/Player/Player2/player_hit_right.png").getImage();
         hitLeftImage = new ImageIcon("images/Player/Player2/player_hit_left.png").getImage();
 
+    }
+
+    @Override
+    protected void initializeSkills() {
+        qSkill = new Player2QSkill(this);
+        wSkill = new Player2WSkill(this);
+        eSkill = new Player2ESkill(this);
     }
 }
