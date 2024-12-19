@@ -169,6 +169,15 @@ public class MapleServer {
                     if (inputLine.startsWith("MAP_CHANGE")) {
                         handleMapChange(inputLine);
                     }
+
+                    if (inputLine.startsWith("SKILL")) {
+                        // 다른 클라이언트에게 스킬 사용 정보 전달
+                        for (ClientHandler client : clients) {
+                            if (client != this) {
+                                client.send(inputLine);
+                            }
+                        }
+                    }
                     else if (inputLine.startsWith("HIT_MONSTER")) {
                         String[] data = inputLine.split(",");
                         int monsterId = Integer.parseInt(data[1]);

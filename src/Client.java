@@ -131,24 +131,15 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     private void receiveUpdates() {
         try {
-            byte[] buffer = new byte[4096];
-            StringBuilder messageBuilder = new StringBuilder();
-
             while (true) {
                 String message = input.readUTF();
-
-
-                // 메시지 시작 부분 확인
-                if (message.contains("MONSTER_UPDATE")) {
-                    // MONSTER_UPDATE 부분부터 시작하도록 자르기
-                    int startIndex = message.indexOf("MONSTER_UPDATE");
-                    message = message.substring(startIndex);
-                }
 
                 if (message.startsWith("MOVE")) {
                     handleMoveMessage(message);
                 } else if (message.startsWith("MONSTER_UPDATE")) {
                     handleMonsterUpdate(message);
+                } else if (message.startsWith("SKILL")) {
+                    handleSkillMessage(message);
                 }
             }
         } catch (IOException e) {
@@ -372,38 +363,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         repaint();
     }
 
-    // 공격 처리 메소드 추가
-    private void attackMonster() {
-        // 공격 범위 설정 (플레이어 앞쪽 30픽셀)
-        Rectangle attackBox = new Rectangle(
-                player1.getX() + (player1.getCurrentState().equals("right") ? player1.getWidth() : -30),
-                player1.getY(),
-                30,
-                player1.getHeight()
-        );
-
-        // 몬스터와의 충돌 체크
-        for (int i = 0; i < monsterManager.getMonsters().size(); i++) {
-            Monster monster = monsterManager.getMonsters().get(i);
-            if (monster.isAlive()) {
-                Rectangle monsterBox = new Rectangle(
-                        monster.getX(),
-                        monster.getY(),
-                        monster.getWidth(),
-                        monster.getHeight()
-                );
-
-                if (attackBox.intersects(monsterBox)) {
-                    try {
-                        output.writeUTF("HIT_MONSTER," + i + ",20"); // 20은 공격력
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -439,12 +398,13 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     // 스킬 사용 메시지 전송
     private void sendSkillUse(String skillType) {
         try {
-            String message = String.format("SKILL,%d,%s,%d,%d,%b",
+            String message = String.format("SKILL,%d,%s,%d,%d,%b,%s",
                     playerID,
                     skillType,
                     player1.getX(),
                     player1.getY(),
-                    player1.isFacingRight()
+                    player1.isFacingRight(),
+                    player1.getCurrentState()
             );
             output.writeUTF(message);
         } catch (IOException ex) {
@@ -461,9 +421,23 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             int x = Integer.parseInt(data[3]);
             int y = Integer.parseInt(data[4]);
             boolean facingRight = Boolean.parseBoolean(data[5]);
+            String state = data[6];
 
-            // 상대방의 스킬 사용 처리
-            if (id != playerID) {
+            // 상대방의 스킬 사용을 처리
+            if (id != playerID && player2 != null) {
+                player2.setPosition(x, y);
+                player2.setState(state);
+                // facingRight 설정 추가
+                if (facingRight) {
+                    if (!player2.isFacingRight()) {
+                        player2.moveRight(0); // 방향만 바꾸기 위해 속도 0으로 설정
+                    }
+                } else {
+                    if (player2.isFacingRight()) {
+                        player2.moveLeft(0); // 방향만 바꾸기 위해 속도 0으로 설정
+                    }
+                }
+
                 switch (skillType) {
                     case "Q":
                         player2.useQSkill();
