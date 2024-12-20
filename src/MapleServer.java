@@ -7,7 +7,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MapleServer {
@@ -17,54 +19,84 @@ public class MapleServer {
     private boolean isRunning = true;
 
     // 맵 관련
-    private static CopyOnWriteArrayList<MapData> maps;
-    private final MonsterManager monsterManager;
+    private Map<ClientHandler, Integer> clientMaps = new HashMap<>();
+    private Map<Integer, MonsterManager> mapMonsterManagers = new HashMap<>();
     private Timer monsterUpdateTimer;
     private int currentMapIndex = 0;
 
-    static {
-        maps = MapData.getMaps();
-    }
+//    static {
+//        maps = MapData.getMaps();
+//    }
 
     public MapleServer(int port) {
         this.port = port;
-        this.monsterManager = new MonsterManager();
+
+        // 각 맵에 대한 MonsterManager 초기화
+        for (int i = 0; i < MapData.getMaps().size(); i++) {
+            MonsterManager manager = new MonsterManager();
+            manager.initializeMonsters(i);
+            mapMonsterManagers.put(i, manager);
+        }
 
         // 몬스터 업데이트 타이머 수정
         monsterUpdateTimer = new Timer(16, e -> {
             if (!clients.isEmpty()) {
-                // 각 몬스터를 자신의 맵으로 업데이트하도록 수정
-                for (Monster monster : monsterManager.getMonsters()) {
-                    if (monster.isAlive()) {
-                        // 몬스터의 맵 인덱스에 해당하는 맵 데이터를 가져와서 업데이트
-                        MapData monsterMap = maps.get(monster.getMapIndex());
+                // 각 맵의 몬스터를 독립적으로 업데이트
+                for (Map.Entry<Integer, MonsterManager> entry : mapMonsterManagers.entrySet()) {
+                    int mapIndex = entry.getKey();
+                    MonsterManager manager = entry.getValue();
+                    MapData mapData = MapData.getMaps().get(mapIndex);
 
-                        monster.update(monsterMap);
+                    for (Monster monster : manager.getMonsters()) {
+                        if (monster.isAlive()) {
+                            monster.update(mapData);
+                        }
                     }
+
+                    // 해당 맵에 있는 클라이언트들에게만 몬스터 상태 전송
+                    String monsterState = createMonsterStateMessage(mapIndex, manager);
+                    broadcastMonsterStateToMap(mapIndex, monsterState);
                 }
-                broadcastMonsterState();
             }
         });
+    }
 
-        monsterManager.initializeMonsters(currentMapIndex);
+    private void broadcastMonsterStateToMap(int mapIndex, String monsterState) {
+        for (Map.Entry<ClientHandler, Integer> entry : clientMaps.entrySet()) {
+            ClientHandler client = entry.getKey();
+            int clientMapIndex = entry.getValue();
+            if (clientMapIndex == mapIndex) {
+                client.send(monsterState);
+            }
+        }
+    }
+
+    private String createMonsterStateMessage(int mapIndex, MonsterManager manager) {
+        StringBuilder message = new StringBuilder("MONSTER_UPDATE,");
+        for (Monster monster : manager.getMonsters()) {
+            message.append(String.format("%d,%d,%d,%s,%b,%b;",
+                    monster.getX(),
+                    monster.getY(),
+                    monster.getHp(),
+                    monster.getCurrentState(),
+                    monster.isFacingRight(),
+                    monster.isAlive()
+            ));
+        }
+        if (message.length() > 0 && message.charAt(message.length() - 1) == ';') {
+            message.setLength(message.length() - 1);
+        }
+        return message.toString();
     }
 
     private synchronized void broadcastMonsterState() {
         try {
-            String monsterState = createMonsterStateMessage();
-            // 디버깅을 위한 로그 추가
-//            System.out.println("Broadcasting monster state: " + monsterState);
-
-            for (ClientHandler client : clients) {
-                if (client != null) {
-                    client.send(monsterState);
-                    // 각 메시지 사이에 약간의 지연 추가
-                    try {
-                        Thread.sleep(5);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
+            for (Map.Entry<ClientHandler, Integer> entry : clientMaps.entrySet()) {
+                ClientHandler client = entry.getKey();
+                int mapIndex = entry.getValue();
+                MonsterManager manager = mapMonsterManagers.get(mapIndex);
+                String monsterState = createMonsterStateMessage(mapIndex, manager);
+                client.send(monsterState);
             }
         } catch (Exception e) {
             System.out.println("Error broadcasting monster state: " + e.getMessage());
@@ -88,8 +120,10 @@ public class MapleServer {
                         ClientHandler clientHandler = new ClientHandler(clientSocket);
                         clients.add(clientHandler);
 
-                        // 새로운 클라이언트 접속 시 현재 몬스터 상태 즉시 전송
-                        clientHandler.send(createMonsterStateMessage());
+                        // 새로운 클라이언트 접속 시 맵 0의 몬스터 상태 전송
+                        MonsterManager initialManager = mapMonsterManagers.get(0);
+                        String monsterState = createMonsterStateMessage(0, initialManager);
+                        clientHandler.send(monsterState);
 
                         new Thread(clientHandler).start();
                         System.out.println("New client connected. Total clients: " + clients.size());
@@ -120,32 +154,22 @@ public class MapleServer {
         }
     }
 
-    private String createMonsterStateMessage() {
-        StringBuilder message = new StringBuilder("MONSTER_UPDATE,");
-        for (Monster monster : monsterManager.getMonsters()) {
-            message.append(String.format("%d,%d,%d,%s,%b,%b;",
-                    monster.getX(),
-                    monster.getY(),
-                    monster.getHp(),
-                    monster.getCurrentState(),
-                    monster.isFacingRight(),
-                    monster.isAlive()
-            ));
-        }
-        if (message.charAt(message.length() - 1) == ';') {
-            message.setLength(message.length() - 1);
-        }
-        return message.toString();
-    }
+//    private String createMonsterStateMessage() {
+//        // 현재 맵의 MonsterManager 사용
+//        MonsterManager currentManager = mapMonsterManagers.get(currentMapIndex);
+//        return createMonsterStateMessage(currentMapIndex, currentManager);
+//    }
+
 
     private void handleMapChange(String data) {
         try {
             String[] parts = data.split(",");
             currentMapIndex = Integer.parseInt(parts[1]);
 
-            // 맵 변경 시 몬스터 초기화하고 현재 맵 정보 전달
-            monsterManager.initializeMonsters(currentMapIndex);
-            broadcastMonsterState();
+            // 해당 맵의 MonsterManager 사용
+            MonsterManager manager = mapMonsterManagers.get(currentMapIndex);
+            String monsterState = createMonsterStateMessage(currentMapIndex, manager);
+            broadcastMonsterStateToMap(currentMapIndex, monsterState);
         } catch (Exception e) {
             System.out.println("Error handling map change: " + e.getMessage());
         }
@@ -163,48 +187,40 @@ public class MapleServer {
 
         public void run() {
             try (DataInputStream input = new DataInputStream(clientSocket.getInputStream())) {
+                clientMaps.put(this, 0);
+
                 while (isConnected) {
                     String inputLine = input.readUTF();
 
                     if (inputLine.startsWith("MAP_CHANGE")) {
-                        handleMapChange(inputLine);
-                    }
-
-                    if (inputLine.startsWith("SKILL")) {
-                        // 다른 클라이언트에게 스킬 사용 정보 전달
+                        String[] parts = inputLine.split(",");
+                        int newMapIndex = Integer.parseInt(parts[1]);
+                        clientMaps.put(this, newMapIndex);
+                        String monsterState = createMonsterStateMessage(newMapIndex, mapMonsterManagers.get(newMapIndex));
+                        send(monsterState);
+                    } else if (inputLine.startsWith("SKILL")) {
+                        // 같은 맵에 있는 다른 클라이언트에게만 스킬 사용 정보 전달
+                        int senderMapIndex = clientMaps.get(this);
+                        for (ClientHandler client : clients) {
+                            if (client != this && clientMaps.get(client) == senderMapIndex) {
+                                client.send(inputLine);
+                            }
+                        }
+                    } else if (inputLine.startsWith("HIT_MONSTER")) {
+                        String[] data = inputLine.split(",");
+                        int monsterId = Integer.parseInt(data[1]);
+                        int damage = Integer.parseInt(data[2]);
+                        int clientMapIndex = clientMaps.get(this);
+                        MonsterManager manager = mapMonsterManagers.get(clientMapIndex);
+                        manager.handleMonsterHit(monsterId, damage);
+                        String monsterState = createMonsterStateMessage(clientMapIndex, manager);
+                        broadcastMonsterStateToMap(clientMapIndex, monsterState);
+                    } else if (inputLine.startsWith("MOVE")) {
                         for (ClientHandler client : clients) {
                             if (client != this) {
                                 client.send(inputLine);
                             }
                         }
-                    }
-                    else if (inputLine.startsWith("HIT_MONSTER")) {
-                        String[] data = inputLine.split(",");
-                        int monsterId = Integer.parseInt(data[1]);
-                        int damage = Integer.parseInt(data[2]);
-                        monsterManager.handleMonsterHit(monsterId, damage);
-                        broadcastMonsterState();
-                    }
-
-                    else if (inputLine.startsWith("MOVE")) {
-                        for (ClientHandler client : clients) {
-                            if (client != this) {
-                                client.send(inputLine);
-                            }
-                        }
-                    }
-                    else if (inputLine.startsWith("HIT_MONSTER")) {
-                        String[] data = inputLine.split(",");
-                        int monsterId = Integer.parseInt(data[1]);
-                        int damage = Integer.parseInt(data[2]);
-                        monsterManager.handleMonsterHit(monsterId, damage);
-                        broadcastMonsterState();
-                    }
-                    else if (inputLine.startsWith("MAP_CHANGE")) {
-                        String[] data = inputLine.split(",");
-                        currentMapIndex = Integer.parseInt(data[1]);
-                        monsterManager.initializeMonsters(currentMapIndex);
-                        broadcastMonsterState();
                     }
                 }
             } catch (IOException e) {
@@ -240,13 +256,15 @@ public class MapleServer {
         public void closeConnection() {
             try {
                 isConnected = false;
+                clientMaps.remove(this);  // 클라이언트 맵 정보 제거
                 clients.remove(this);
                 clientSocket.close();
                 System.out.println("Client connection closed. Remaining clients: " + clients.size());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+
+    }
     }
 
     public static void main(String[] args) {
