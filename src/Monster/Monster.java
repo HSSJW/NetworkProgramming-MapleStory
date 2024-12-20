@@ -15,8 +15,15 @@ public abstract class Monster {
     protected boolean onGround = false;
     protected int verticalSpeed = 0;
     protected static final int GRAVITY = 2;
-    protected Rectangle hitbox;
+
     private int mapIndex;  // 몬스터가 속한 맵의 인덱스
+    
+    //몬스터 사망관련 변수
+    public Rectangle hitbox;
+    protected float opacity = 1.0f;  // 투명도 추가
+    protected long deathTime = 0;    // 사망 시간 저장
+    public static final long DEATH_ANIMATION_DURATION = 1000; // 1초
+
 
 
     // enum 대신 String으로 상태 관리
@@ -34,8 +41,9 @@ public abstract class Monster {
         this.x = startX;
         this.y = startY;
         this.mapIndex = mapIndex;
-        this.hitbox = new Rectangle(x, y, width, height);
-        initializeImages();
+        initializeImages(); // 이미지를 먼저 초기화
+        // hitbox를 이미지 크기에 맞게 조정 (약간 작게)
+        this.hitbox = new Rectangle(x + 10, y + 10, width - 20, height - 20);
     }
 
     public int getMapIndex() {
@@ -48,16 +56,12 @@ public abstract class Monster {
     public void update(MapData currentMap) {
         if (!isAlive) return;
 
-
         // 중력 적용
         if (!onGround) {
             if (verticalSpeed <= 25) {
                 verticalSpeed += GRAVITY;
             }
         }
-
-        // 이전 위치 저장
-        int prevY = y;
 
         // 위치 업데이트
         y += verticalSpeed;
@@ -123,7 +127,7 @@ public abstract class Monster {
         setState(moving ? "move" : "idle");
 
         // 히트박스 업데이트
-        hitbox.setLocation(x, y);
+        hitbox.setLocation(x + 10, y + 10);
     }
 
     public void setState(String state) {
@@ -148,36 +152,77 @@ public abstract class Monster {
         }
     }
 
-    public void takeDamage(int damage) {
+    //데미지 판정
+    public void takeDamage(int damage) {  // 스킬로부터 받은 데미지를 사용
+        if (!isAlive) return;
+
         hp -= damage;
         setState("hit");
+
         if (hp <= 0) {
+            hp = 0;
             isAlive = false;
+            deathTime = System.currentTimeMillis();
             setState("dead");
+        } else {
+            // 피격 상태를 잠시 유지하다가 idle로 돌아가기
+            new Thread(() -> {
+                try {
+                    Thread.sleep(500);
+                    if (isAlive) {
+                        setState("idle");
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 
     public void paintMonster(Graphics g, Component observer) {
-        if (currentImage != null) {
-            g.drawImage(currentImage, x, y, width, height, observer);
+        if (currentImage == null) return;
 
-            // HP 바 그리기
-            if (isAlive && hp < maxHp) {
-                int hpBarWidth = width;
-                int hpBarHeight = 5;
-                int hpBarY = y - hpBarHeight - 2;
+        Graphics2D g2d = (Graphics2D) g;
+        Composite originalComposite = g2d.getComposite();
 
-                // HP 바 배경
-                g.setColor(Color.RED);
-                g.fillRect(x, hpBarY, hpBarWidth, hpBarHeight);
+        if (!isAlive) {
+            // 사망 애니메이션 처리
+            long currentTime = System.currentTimeMillis();
+            long elapsedTime = currentTime - deathTime;
 
-                // 현재 HP
-                g.setColor(Color.GREEN);
-                int currentHpWidth = (int)((double)hp / maxHp * hpBarWidth);
-                g.fillRect(x, hpBarY, currentHpWidth, hpBarHeight);
+            if (elapsedTime >= DEATH_ANIMATION_DURATION) {
+                return; // 애니메이션 종료 후 그리지 않음
             }
+
+            // 시간에 따른 투명도 계산 (1.0 -> 0.0)
+            opacity = 1.0f - ((float) elapsedTime / DEATH_ANIMATION_DURATION);
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
         }
+
+        // 몬스터 이미지 그리기
+        g2d.drawImage(currentImage, x, y, width, height, observer);
+
+        // HP 바 그리기 (살아있고 피해를 입었을 때만)
+        if (isAlive && hp < maxHp) {
+            int hpBarWidth = width;
+            int hpBarHeight = 5;
+            int hpBarY = y - hpBarHeight - 2;
+
+            // HP 바 배경
+            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+            g2d.setColor(Color.RED);
+            g2d.fillRect(x, hpBarY, hpBarWidth, hpBarHeight);
+
+            // 현재 HP
+            g2d.setColor(Color.GREEN);
+            int currentHpWidth = (int)((double)hp / maxHp * hpBarWidth);
+            g2d.fillRect(x, hpBarY, currentHpWidth, hpBarHeight);
+        }
+
+        // 원래 컴포짓 상태로 복구
+        g2d.setComposite(originalComposite);
     }
+
 
     // Getters and Setters
     public int getX() { return x; }
@@ -213,5 +258,19 @@ public abstract class Monster {
         if (!alive) {
             setState("dead");
         }
+    }
+
+    public long getDeathTime() {
+        return deathTime;
+    }
+
+
+
+    public float getOpacity() {
+        return opacity;
+    }
+
+    public void setOpacity(float opacity) {
+        this.opacity = opacity;
     }
 }

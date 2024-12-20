@@ -16,7 +16,7 @@ public abstract class WSkill extends Skill {
 
 
     public WSkill(Player owner) {
-        super("W_Skill", 30, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
+        super("W_Skill", 10, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
 
         loadSkillImages(); // 명시적으로 이미지 로드 호출
     }

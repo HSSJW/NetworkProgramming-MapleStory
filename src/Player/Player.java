@@ -59,7 +59,6 @@ public abstract class Player {
         // 스킬 상태 확인 및 그리기
         if (qSkill != null) {
             if (qSkill.isActive()) {
-                System.out.println("QSkill is active, drawing...");
 
                 qSkill.draw(g2d, observer);
             }
@@ -294,5 +293,18 @@ public abstract class Player {
 
     public void setImage(Image image) {
         this.currentImage = image;
+    }
+
+    // Skill getters
+    public QSkill getQSkill() {
+        return qSkill;
+    }
+
+    public WSkill getWSkill() {
+        return wSkill;
+    }
+
+    public ESkill getESkill() {
+        return eSkill;
     }
 }

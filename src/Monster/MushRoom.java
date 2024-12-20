@@ -1,15 +1,33 @@
 package Monster;
 
+import Map.MapData;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class MushRoom extends Monster {
     public MushRoom(int startX, int startY, int mapIndex) {
         super(startX, startY, mapIndex);
-        this.hp = 100;
-        this.maxHp = 100;
         this.width = 70;
         this.height = 70;
+        this.hp = 100;
+        this.maxHp = 100;
+
+        // hitbox를 몬스터 크기에 맞게 초기화
+        this.hitbox = new Rectangle(x + 10, y + 10, width - 20, height - 20);
+
+        // 이미지 로드
+        initializeImages();
+    }
+
+    @Override
+    public void update(MapData currentMap) {
+        super.update(currentMap);
+        // hitbox 위치 업데이트
+        if (hitbox != null) {
+            hitbox.setLocation(x + 10, y + 10);
+            hitbox.setSize(width - 20, height - 20);
+        }
     }
 
     @Override
@@ -18,16 +36,19 @@ public class MushRoom extends Monster {
         idleRightImage = new ImageIcon("images/monster/mushroom/mushroom_idle_right.gif").getImage();
         idleLeftImage = new ImageIcon("images/monster/mushroom/mushroom_idle_left.gif").getImage();
 
-// 이동 상태 이미지
+        // 이동 상태 이미지
         moveRightImage = new ImageIcon("images/monster/mushroom/mushroom_moving_right.gif").getImage();
         moveLeftImage = new ImageIcon("images/monster/mushroom/mushroom_moving_left.gif").getImage();
 
-// 피격 상태 이미지
+        // 피격 상태 이미지
         hitRightImage = new ImageIcon("images/monster/mushroom/mushroom_hit_right.gif").getImage();
         hitLeftImage = new ImageIcon("images/monster/mushroom/mushroom_hit_left.gif").getImage();
 
-// 사망 상태 이미지
+        // 사망 상태 이미지
         deadRightImage = new ImageIcon("images/monster/mushroom/mushroom_dead_right.gif").getImage();
         deadLeftImage = new ImageIcon("images/monster/mushroom/mushroom_dead_left.gif").getImage();
+
+        // 현재 이미지 초기화
+        currentImage = idleRightImage;
     }
 }

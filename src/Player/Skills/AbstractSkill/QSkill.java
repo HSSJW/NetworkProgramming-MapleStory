@@ -15,7 +15,7 @@ public abstract class QSkill extends Skill {
 
 
     public QSkill(Player owner) {
-        super("Q_Skill", 30, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
+        super("Q_Skill", 5, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
 
         loadSkillImages(); // 명시적으로 이미지 로드 호출
     }
@@ -27,12 +27,19 @@ public abstract class QSkill extends Skill {
             isActive = true;
             lastUseTime = System.currentTimeMillis();
 
-            // hitbox 초기화에 yOffset 적용
-            int hitboxX = facingRight ?
-                    owner.getX() + owner.getWidth() :
-                    owner.getX() - skillWidth;
-            int hitboxY = owner.getY() + yOffset;  // yOffset 적용
-            hitbox = new Rectangle(hitboxX, hitboxY, skillWidth, skillHeight);
+            // hitbox 위치 계산 수정
+            int hitboxX;
+            if (facingRight) {
+                hitboxX = owner.getX() + owner.getWidth() - 20; // 약간의 여백
+            } else {
+                hitboxX = owner.getX() - skillWidth + 20; // 약간의 여백
+            }
+
+            // y 위치 조정 (캐릭터 중앙 높이에 맞춤)
+            int hitboxY = owner.getY() + (owner.getHeight() / 2) - (skillHeight / 2) + yOffset;
+
+            // hitbox 생성
+            hitbox = new Rectangle(hitboxX, hitboxY, skillWidth - 20, skillHeight - 20); // 약간 작게
         }
     }
 
@@ -42,17 +49,23 @@ public abstract class QSkill extends Skill {
             long currentTime = System.currentTimeMillis();
             long elapsedTime = currentTime - lastUseTime;
 
-            // 스킬 지속 시간 체크
             if (elapsedTime >= duration) {
                 isActive = false;
+                hitbox = null; // hitbox 제거
                 return;
             }
 
-            // hitbox 업데이트
-//            int hitboxX = facingRight ?
-//                    owner.getX() + owner.getWidth() :
-//                    owner.getX() - SKILL_WIDTH;
-//            hitbox.setLocation(hitboxX, owner.getY());
+            // hitbox 위치 업데이트
+            if (hitbox != null) {
+                int hitboxX;
+                if (facingRight) {
+                    hitboxX = owner.getX() + owner.getWidth() - 20;
+                } else {
+                    hitboxX = owner.getX() - skillWidth + 20;
+                }
+                int hitboxY = owner.getY() + (owner.getHeight() / 2) - (skillHeight / 2) + yOffset;
+                hitbox.setLocation(hitboxX, hitboxY);
+            }
         }
     }
 
@@ -91,11 +104,6 @@ public abstract class QSkill extends Skill {
         }
     }
     
-    //gif가 재생중인지 판별
-//    protected boolean isGifPlaying() {
-//        ImageIcon currentGif = facingRight ? gifRight : gifLeft;
-//        return currentGif != null && currentGif.getImageObserver() != null;
-//    }
 
     //이미지 로딩 함수
     @Override

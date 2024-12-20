@@ -49,6 +49,10 @@ public abstract class Skill {
         }
     }
 
+    public int getDamage() {
+        return damage;
+    }
+
     public boolean isActive() { return isActive; }
     public Rectangle getHitbox() { return hitbox; }
 }

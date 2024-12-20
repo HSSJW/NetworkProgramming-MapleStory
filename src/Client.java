@@ -4,6 +4,7 @@ import Monster.*;
 import Player.Player;
 import Player.Player1.Player1;
 import Player.Player2.Player2;
+import Player.Skills.Skill;
 import Sound.AudioPlayer;
 
 
@@ -48,8 +49,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private double scaleY = 1.0;
     private static final int REFERENCE_WIDTH = 1400;  // 기준이 되는 창 너비
     private static final int REFERENCE_HEIGHT = 800;  // 기준이 되는 창 높이
-    private int cameraX = 0;
-    private int cameraY = 0;
+
     private static final int VIEWPORT_WIDTH = 800;  // 화면에 보이는 영역 너비
     private static final int VIEWPORT_HEIGHT = 600; // 화면에 보이는 영역 높이
 
@@ -355,6 +355,18 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             player2.updateSkills();
         }
 
+        // 스킬 몬스터 충돌 체크
+        checkSkillMonsterCollisions();
+
+        // 몬스터 업데이트
+        for (Monster monster : monsterManager.getMonsters()) {
+            if (!monster.isAlive() &&
+                    System.currentTimeMillis() - monster.getDeathTime() >= Monster.DEATH_ANIMATION_DURATION) {
+                // 몬스터가 완전히 사라진 후의 처리를 여기에 추가할 수 있습니다
+                // 예: 경험치 획득, 아이템 드롭 등
+            }
+        }
+
         sendPosition();
         repaint();
     }
@@ -364,19 +376,24 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     public void keyPressed(KeyEvent e) {
         pressedKeys.add(e.getKeyCode());
 
-        // 스킬 키 입력 처리
         switch (e.getKeyCode()) {
             case KeyEvent.VK_Q:
-                player1.useQSkill();
-                sendSkillUse("Q");
+                if (player1.getQSkill().canUse()) {
+                    player1.useQSkill();
+                    sendSkillUse("Q");
+                }
                 break;
             case KeyEvent.VK_W:
-                player1.useWSkill();
-                sendSkillUse("W");
+                if (player1.getWSkill().canUse()) {
+                    player1.useWSkill();
+                    sendSkillUse("W");
+                }
                 break;
             case KeyEvent.VK_E:
-                player1.useESkill();
-                sendSkillUse("E");
+                if (player1.getESkill().canUse()) {
+                    player1.useESkill();
+                    sendSkillUse("E");
+                }
                 break;
         }
     }
@@ -504,6 +521,39 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         String musicPath = getCurrentMap().getBackgroundMusicPath();
         audioPlayer.play(musicPath);
     }
+
+    private void checkSkillMonsterCollisions() {
+        Skill currentSkill = null;
+
+        // 현재 활성화된 스킬 찾기
+        if (player1.getQSkill().isActive()) {
+            currentSkill = player1.getQSkill();
+        } else if (player1.getWSkill().isActive()) {
+            currentSkill = player1.getWSkill();
+        } else if (player1.getESkill().isActive()) {
+            currentSkill = player1.getESkill();
+        }
+
+        if (currentSkill == null || currentSkill.getHitbox() == null) return;
+
+        // 스킬과 몬스터 충돌 체크
+        Rectangle skillHitbox = currentSkill.getHitbox();
+        CopyOnWriteArrayList<Monster> monsters = monsterManager.getMonsters();
+
+        for (int i = 0; i < monsters.size(); i++) {
+            Monster monster = monsters.get(i);
+            if (monster.isAlive() && monster.hitbox.intersects(skillHitbox)) {
+                // 서버에 몬스터 피격 정보 전송
+                try {
+                    output.writeUTF("HIT_MONSTER," + i + "," + currentSkill.getDamage());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
 
 
     public static void main(String[] args) {
