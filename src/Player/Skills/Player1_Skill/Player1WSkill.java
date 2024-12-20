@@ -10,11 +10,17 @@ import java.awt.*;
 public class Player1WSkill extends WSkill {
     public Player1WSkill(Player owner) {
         super(owner);
+        this.yOffset = -170;
     }
 
     @Override
     protected void loadSkillImages() {
-        gifRight = new ImageIcon("images/skills/player1/w_right.gif");
-        gifLeft = new ImageIcon("images/skills/player1/w_left.gif");
+            rightImage = new ImageIcon("images/Player/Player1/skill/player1-w-right.gif").getImage();
+            leftImage = new ImageIcon("images/Player/Player1/skill/player1-w-left.gif").getImage();
+
+            // 오른쪽 이미지 기준으로 스킬 크기 설정
+            updateSkillDimensions(rightImage);
+
+
     }
 }
