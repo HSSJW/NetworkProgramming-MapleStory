@@ -19,7 +19,8 @@ public abstract class Skill {
     protected ImageIcon gifLeft;
     protected Image rightImage;
     protected Image leftImage;
-
+    protected int yOffset = 0;  // y축 오프셋 (양수: 아래로, 음수: 위로)   >> 기본값은 0이기 때문에 필요하다면 각각의 Concrete클래스에서 추가해서 사용하면됨
+    protected int xOffset = 0;  // x축 오프셋 (양수: 오른쪽, 음수: 왼쪽)   >> 기본값은 0이기 때문에 필요하다면 각각의 Concrete클래스에서 추가해서 사용하면됨
 
     public Skill(String name, int damage, long cooldown, int duration, Player owner) {
         this.name = name;

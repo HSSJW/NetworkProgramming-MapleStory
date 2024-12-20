@@ -12,6 +12,8 @@ public abstract class QSkill extends Skill {
     protected int skillHeight; // 동적 크기를 위해 변경
     private static final int SKILL_DURATION = 2000; // 1초로 증가
 
+
+
     public QSkill(Player owner) {
         super("Q_Skill", 30, 2000, SKILL_DURATION, owner); // 쿨다운 2초, 지속시간 1초
 
@@ -24,11 +26,13 @@ public abstract class QSkill extends Skill {
             this.facingRight = facingRight;
             isActive = true;
             lastUseTime = System.currentTimeMillis();
-            // hitbox 초기화 - 실제 이미지 크기 사용
+
+            // hitbox 초기화에 yOffset 적용
             int hitboxX = facingRight ?
                     owner.getX() + owner.getWidth() :
                     owner.getX() - skillWidth;
-            hitbox = new Rectangle(hitboxX, owner.getY(), skillWidth, skillHeight);
+            int hitboxY = owner.getY() + yOffset;  // yOffset 적용
+            hitbox = new Rectangle(hitboxX, hitboxY, skillWidth, skillHeight);
         }
     }
 
@@ -54,16 +58,21 @@ public abstract class QSkill extends Skill {
 
     @Override
     public void draw(Graphics2D g2d, Component observer) {
+        // 객체가 활성화 상태(isActive)이고 히트박스(hitbox)가 존재하는 경우에만 그리기 작업 수행
         if (isActive && hitbox != null) {
+            // 캐릭터가 바라보는 방향(facingRight)에 따라 오른쪽 이미지를 사용할지(leftImage)를 결정
             Image currentGif = facingRight ? rightImage : leftImage;
+
+            // 선택된 이미지가 존재할 경우 그래픽 객체(g2d)를 사용하여 이미지 그리기
             if (currentGif != null) {
-                g2d.drawImage(currentGif,
-                        hitbox.x, hitbox.y,
-                        skillWidth, skillHeight,  // 동적 크기 사용
-                        observer);
+                g2d.drawImage(currentGif,  // 현재 이미지
+                        hitbox.x, hitbox.y,  // 이미지의 위치를 히트박스의 x, y 좌표로 설정
+                        skillWidth, skillHeight,  // 스킬 이미지의 동적 크기를 설정
+                        observer);  // 이미지를 로드할 관찰자 객체
             }
         }
     }
+
 
     // 이미지 크기를 가져오는 유틸리티 메소드 추가
     protected void updateSkillDimensions(Image image) {
