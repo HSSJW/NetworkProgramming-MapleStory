@@ -40,20 +40,20 @@ public class MapleServer {
 
         // 몬스터 업데이트 타이머 수정
         monsterUpdateTimer = new Timer(16, e -> {
-            if (!clients.isEmpty()) {
-                // 각 맵의 몬스터를 독립적으로 업데이트
-                for (Map.Entry<Integer, MonsterManager> entry : mapMonsterManagers.entrySet()) {
-                    int mapIndex = entry.getKey();
-                    MonsterManager manager = entry.getValue();
-                    MapData mapData = MapData.getMaps().get(mapIndex);
+            // 클라이언트 존재 여부와 상관없이 모든 맵의 몬스터 업데이트
+            for (Map.Entry<Integer, MonsterManager> entry : mapMonsterManagers.entrySet()) {
+                int mapIndex = entry.getKey();
+                MonsterManager manager = entry.getValue();
+                MapData mapData = MapData.getMaps().get(mapIndex);
 
-                    for (Monster monster : manager.getMonsters()) {
-                        if (monster.isAlive()) {
-                            monster.update(mapData);
-                        }
+                for (Monster monster : manager.getMonsters()) {
+                    if (monster.isAlive()) {
+                        monster.update(mapData);
                     }
+                }
 
-                    // 해당 맵에 있는 클라이언트들에게만 몬스터 상태 전송
+                // 클라이언트가 있는 경우에만 상태 전송
+                if (!clients.isEmpty()) {
                     String monsterState = createMonsterStateMessage(mapIndex, manager);
                     broadcastMonsterStateToMap(mapIndex, monsterState);
                 }
