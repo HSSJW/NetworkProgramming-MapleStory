@@ -198,7 +198,8 @@ public class MapleServer {
                         clientMaps.put(this, newMapIndex);
                         String monsterState = createMonsterStateMessage(newMapIndex, mapMonsterManagers.get(newMapIndex));
                         send(monsterState);
-                    } else if (inputLine.startsWith("SKILL")) {
+                    }
+                    else if (inputLine.startsWith("SKILL")) {
                         // 같은 맵에 있는 다른 클라이언트에게만 스킬 사용 정보 전달
                         int senderMapIndex = clientMaps.get(this);
                         for (ClientHandler client : clients) {
@@ -206,7 +207,8 @@ public class MapleServer {
                                 client.send(inputLine);
                             }
                         }
-                    } else if (inputLine.startsWith("HIT_MONSTER")) {
+                    }
+                    else if (inputLine.startsWith("HIT_MONSTER")) {
                         String[] data = inputLine.split(",");
                         int monsterId = Integer.parseInt(data[1]);
                         int damage = Integer.parseInt(data[2]);
@@ -215,10 +217,29 @@ public class MapleServer {
                         manager.handleMonsterHit(monsterId, damage);
                         String monsterState = createMonsterStateMessage(clientMapIndex, manager);
                         broadcastMonsterStateToMap(clientMapIndex, monsterState);
-                    } else if (inputLine.startsWith("MOVE")) {
+                    }
+                    else if (inputLine.startsWith("MOVE")) {
                         for (ClientHandler client : clients) {
                             if (client != this) {
                                 client.send(inputLine);
+                            }
+                        }
+                    }
+
+                    if (inputLine.startsWith("CHAT")) {
+                        // 채팅 메시지 파싱
+                        String[] parts = inputLine.split(",");
+                        int senderId = Integer.parseInt(parts[1]);
+                        String message = parts[2];
+
+                        // 채팅 메시지 형식 재구성
+                        String chatMessage = "CHAT," + senderId + "," + message;
+
+                        // 같은 맵에 있는 다른 클라이언트에게만 메시지 전달
+                        int senderMapIndex = clientMaps.get(this);
+                        for (ClientHandler client : clients) {
+                            if (client != this && clientMaps.get(client) == senderMapIndex) {
+                                client.send(chatMessage);  // 다른 클라이언트에게 메시지 전송
                             }
                         }
                     }

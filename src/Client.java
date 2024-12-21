@@ -14,6 +14,7 @@ import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -58,6 +59,20 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private boolean isAttacking = false;
     private long lastAttackTime = 0;
     private static final long ATTACK_COOLDOWN = 500; // 0.5초 공격 쿨다운
+
+    //채팅기능 관련
+    private Image chatBoxImage;  // 채팅창 이미지
+    private boolean isChatting = false;  // 채팅 입력 중인지 여부
+    private StringBuilder currentChat = new StringBuilder();  // 현재 입력 중인 채팅
+    private long chatBlinkTimer = 0;  // 커서 깜빡임용 타이머
+    private boolean showCursor = true;  // 커서 표시 여부
+    private String displayMessage = "";  // 말풍선에 표시할 메시지
+    private long messageDisplayTime = 0;  // 메시지 표시 시작 시간
+    private static final long MESSAGE_DURATION = 4000;  // 메시지 표시 지속 시간 (4초)
+    private Rectangle chatBoxBounds;  // 채팅창의 클릭 가능 영역
+    private boolean isOpponentMessage = false;
+    //채팅기능 관련
+
 
 
     // 키 입력 상태를 저장하는 Set
@@ -106,9 +121,26 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         tradeButtonImage = new ImageIcon("images/ui/tradebutton.png").getImage();
         shortcutButtonImage = new ImageIcon("images/ui/shortcutbutton.png").getImage();
         shopButtonImage = new ImageIcon("images/ui/shopbutton.png").getImage();
-
         // 상태바 이미지 크기 조정
         stateBarImage = stateBarImage.getScaledInstance(mapWidth, stateBarImage.getHeight(null), Image.SCALE_SMOOTH);
+
+
+        //채팅창 이미지 초기화 및 크기조절
+        chatBoxImage = new ImageIcon("images/ui/chatting.png").getImage();
+        // 채팅창 이미지 크기 조정 (원본 비율 유지하면서 높이 기준으로 조정)
+        double ratio = (double)chatBoxImage.getWidth(null) / chatBoxImage.getHeight(null);
+        int newHeight = 30; // 상태바보다 살짝 작게
+        int newWidth = (int)(newHeight * ratio) + 700;  // 기존 비율에서 100픽셀 추가
+        chatBoxImage = chatBoxImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+
+// 채팅창 위치 조정 (상태바 바로 위에 위치)
+        chatBoxBounds = new Rectangle(
+                0,
+                REFERENCE_HEIGHT - stateBarImage.getHeight(null) - newHeight - 40,
+                newWidth,
+                newHeight
+        );
+        addMouseListener(new ChatMouseListener());
 
         // 키 상태 초기화
         pressedKeys = new HashSet<>();
@@ -141,9 +173,25 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                 } else if (message.startsWith("SKILL")) {
                     handleSkillMessage(message);
                 }
+                else if (message.startsWith("CHAT")) {    // 이 부분 추가
+                handleChatMessage(message);             // 이 부분 추가
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void handleChatMessage(String message) {
+        String[] parts = message.split(",");
+        int senderId = Integer.parseInt(parts[1]);
+        String chatMessage = parts[2];
+
+        // 상대방의 메시지인 경우에만 처리
+        if (senderId != playerID) {
+            displayMessage = chatMessage;
+            messageDisplayTime = System.currentTimeMillis();
+            isOpponentMessage = true;  // 상대방 메시지임을 표시
         }
     }
 
@@ -303,19 +351,22 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         g2d.drawImage(stateBarImage, 0, REFERENCE_HEIGHT - stateBarHeight,
                 REFERENCE_WIDTH, stateBarHeight, this);
 
-        // 버튼 그리기
-        int buttonSpacing = 10;
-        int buttonWidth = tradeButtonImage.getWidth(null);
-        int buttonHeight = tradeButtonImage.getHeight(null);
-        int buttonStartX = REFERENCE_WIDTH - (buttonWidth * 3 + buttonSpacing * 2);
-        int buttonY = REFERENCE_HEIGHT - stateBarHeight +
-                (stateBarHeight - buttonHeight) / 2;
+        // 채팅 UI 그리기
+        drawChat(g2d);
 
-        g2d.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
-        g2d.drawImage(shortcutButtonImage,
-                buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
-        g2d.drawImage(shopButtonImage,
-                buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
+        // 버튼 그리기
+//        int buttonSpacing = 10;
+//        int buttonWidth = tradeButtonImage.getWidth(null);
+//        int buttonHeight = tradeButtonImage.getHeight(null);
+//        int buttonStartX = REFERENCE_WIDTH - (buttonWidth * 3 + buttonSpacing * 2);
+//        int buttonY = REFERENCE_HEIGHT - stateBarHeight +
+//                (stateBarHeight - buttonHeight) / 2;
+//
+//        g2d.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
+//        g2d.drawImage(shortcutButtonImage,
+//                buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
+//        g2d.drawImage(shopButtonImage,
+//                buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
     }
 
 
@@ -374,27 +425,32 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        pressedKeys.add(e.getKeyCode());
+        if (isChatting) {
+            handleChatKeyPress(e);
+        } else {
+            // 기존의 게임 키 입력 처리
+            pressedKeys.add(e.getKeyCode());
 
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_Q:
-                if (player1.getQSkill().canUse()) {
-                    player1.useQSkill();
-                    sendSkillUse("Q");
-                }
-                break;
-            case KeyEvent.VK_W:
-                if (player1.getWSkill().canUse()) {
-                    player1.useWSkill();
-                    sendSkillUse("W");
-                }
-                break;
-            case KeyEvent.VK_E:
-                if (player1.getESkill().canUse()) {
-                    player1.useESkill();
-                    sendSkillUse("E");
-                }
-                break;
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_Q:
+                    if (player1.getQSkill().canUse()) {
+                        player1.useQSkill();
+                        sendSkillUse("Q");
+                    }
+                    break;
+                case KeyEvent.VK_W:
+                    if (player1.getWSkill().canUse()) {
+                        player1.useWSkill();
+                        sendSkillUse("W");
+                    }
+                    break;
+                case KeyEvent.VK_E:
+                    if (player1.getESkill().canUse()) {
+                        player1.useESkill();
+                        sendSkillUse("E");
+                    }
+                    break;
+            }
         }
     }
 
@@ -403,10 +459,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         pressedKeys.remove(e.getKeyCode());
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // 사용하지 않음
-    }
 
     // 스킬 사용 메시지 전송
     private void sendSkillUse(String skillType) {
@@ -553,8 +605,143 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (isChatting) {
+            // 엔터키와 백스페이스는 제외 (이는 keyPressed에서 처리)
+            if (e.getKeyChar() != KeyEvent.VK_ENTER && e.getKeyChar() != KeyEvent.VK_BACK_SPACE) {
+                currentChat.append(e.getKeyChar());
+            }
+        }
+    }
 
+    private void handleChatKeyPress(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            if (currentChat.length() > 0) {
+                displayMessage = currentChat.toString();
+                messageDisplayTime = System.currentTimeMillis();
+                sendChatMessage(displayMessage);
+            }
+            isChatting = false;
+            currentChat.setLength(0);
+        } else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && currentChat.length() > 0) {
+            currentChat.deleteCharAt(currentChat.length() - 1);
+        } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            isChatting = false;
+            currentChat.setLength(0);
+        }
+        // 여기서 문자 추가하는 부분 제거 (keyTyped에서 처리)
+    }
 
+    // 마우스 클릭 이벤트 처리를 위한 내부 클래스
+    private class ChatMouseListener extends MouseAdapter {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            Point clickPoint = new Point((int)(e.getX() / scaleX), (int)(e.getY() / scaleY));
+            if (chatBoxBounds.contains(clickPoint)) {
+                isChatting = true;
+                chatBlinkTimer = System.currentTimeMillis();
+            }
+        }
+    }
+
+    // paintComponent 메서드에 추가할 채팅 UI 그리기 코드
+    private void drawChat(Graphics2D g2d) {
+        // 채팅창 그리기
+        g2d.drawImage(chatBoxImage, chatBoxBounds.x, chatBoxBounds.y,
+                chatBoxBounds.width, chatBoxBounds.height, null);
+
+        // 입력 중인 텍스트와 커서 그리기
+        if (isChatting) {
+            g2d.setColor(Color.BLACK);
+            String displayText = currentChat.toString();
+            if (System.currentTimeMillis() - chatBlinkTimer > 500) {
+                showCursor = !showCursor;
+                chatBlinkTimer = System.currentTimeMillis();
+            }
+            if (showCursor) {
+                displayText += "|";
+            }
+            g2d.drawString(displayText, chatBoxBounds.x + 200,
+                    chatBoxBounds.y + chatBoxBounds.height - 10);
+        }
+
+        // 말풍선 메시지 그리기
+        if (!displayMessage.isEmpty() &&
+                System.currentTimeMillis() - messageDisplayTime < MESSAGE_DURATION) {
+            if (isOpponentMessage) {
+                // 상대방 메시지는 player2 위에 그리기
+                drawChatBubble(g2d, displayMessage, player2.getX() + player2.getWidth() / 2,
+                        player2.getY() - 20);
+            } else {
+                // 자신의 메시지는 player1 위에 그리기
+                drawChatBubble(g2d, displayMessage, player1.getX() + player1.getWidth() / 2,
+                        player1.getY() - 20);
+            }
+        }
+    }
+
+    private void drawChatBubble(Graphics2D g2d, String message, int x, int y) {
+        int maxCharsPerLine = 15; // 한 줄당 최대 글자 수
+        ArrayList<String> lines = splitString(message, maxCharsPerLine);
+
+        FontMetrics fm = g2d.getFontMetrics();
+        int padding = 10;
+
+        int maxLineWidth = 0;
+        for (String line : lines) {
+            int lineWidth = fm.stringWidth(line);
+            maxLineWidth = Math.max(maxLineWidth, lineWidth);
+        }
+
+        int bubbleWidth = maxLineWidth + padding * 2;
+        int bubbleHeight = (fm.getHeight() * lines.size()) + padding;
+
+        // 말풍선 배경
+        g2d.setColor(new Color(255, 255, 255, 220));
+        g2d.fillRoundRect(x - bubbleWidth / 2, y - bubbleHeight,
+                bubbleWidth, bubbleHeight, 10, 10);
+
+        // 말풍선 테두리
+        g2d.setColor(Color.BLACK);
+        g2d.drawRoundRect(x - bubbleWidth / 2, y - bubbleHeight,
+                bubbleWidth, bubbleHeight, 10, 10);
+
+        // 각 줄의 메시지 텍스트 그리기
+        g2d.setColor(Color.BLACK);
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            int lineWidth = fm.stringWidth(line);
+            int lineY = y - bubbleHeight + fm.getAscent() + (i * fm.getHeight()) + (padding / 2);
+            g2d.drawString(line, x - lineWidth / 2, lineY);
+        }
+    }
+
+    private ArrayList<String> splitString(String text, int maxCharsPerLine) {
+        ArrayList<String> lines = new ArrayList<>();
+
+        while (text.length() > maxCharsPerLine) {
+            int endIndex = maxCharsPerLine;
+            String line = text.substring(0, endIndex);
+            lines.add(line);
+            text = text.substring(endIndex);
+        }
+
+        if (!text.isEmpty()) {
+            lines.add(text);
+        }
+
+        return lines;
+    }
+
+    // 서버로 채팅 메시지 전송하는 메서드
+    private void sendChatMessage(String message) {
+        try {
+            output.writeUTF("CHAT," + playerID + "," + message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) {
         try {
