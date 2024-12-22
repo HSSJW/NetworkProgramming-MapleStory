@@ -99,23 +99,31 @@ public class MonsterManager {
         }
     }
 
-    public void updateMonsters(MapData currentMap) {
-        for (Monster monster : monsters) {
-            if (monster.isAlive()) {
-                // 몬스터의 맵 인덱스에 해당하는 맵 데이터를 가져와서 업데이트
-                MapData monsterMap = maps.get(monster.getMapIndex());
-                monster.update(monsterMap);  // 각 몬스터는 자신이 속한 맵의 데이터로 업데이트
-            }
-        }
-    }
 
 
     public CopyOnWriteArrayList<Monster> getMonsters() {
         return monsters;
     }
 
-    public void respawnMonsters(int mapIndex) {
-        initializeMonsters(mapIndex);
+
+
+    public boolean areAllMapMonstersDead(int mapIndex) {
+
+        int aliveCount = 0;
+        int deadCount = 0;
+
+        for (Monster monster : monsters) {
+            if (monster.getMapIndex() == mapIndex) {
+                if (monster.isAlive()) {
+                    aliveCount++;
+                } else {
+                    deadCount++;
+                }
+            }
+        }
+
+        // 해당 맵의 몬스터들이 모두 죽었는지 확인
+        return aliveCount == 0 && deadCount > 0;
     }
 
     public boolean handleMonsterHit(int monsterId, int damage) {
@@ -128,4 +136,6 @@ public class MonsterManager {
         }
         return false;
     }
+
+
 }

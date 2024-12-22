@@ -73,10 +73,6 @@ public abstract class Player {
         }
     }
 
-    // 디버깅을 위한 메서드 추가
-    public boolean isQSkillActive() {
-        return qSkill != null && qSkill.isActive();
-    }
 
     public void updateSkills() {
         if (qSkill != null && qSkill.isActive()) qSkill.update();

@@ -217,6 +217,11 @@ public class MapleServer {
                         manager.handleMonsterHit(monsterId, damage);
                         String monsterState = createMonsterStateMessage(clientMapIndex, manager);
                         broadcastMonsterStateToMap(clientMapIndex, monsterState);
+
+                        // 모든 맵의 몬스터가 죽었는지 확인
+                        if (checkAllMapsCleared()) {
+                            broadcastGameEnd();
+                        }
                     }
                     else if (inputLine.startsWith("MOVE")) {
                         for (ClientHandler client : clients) {
@@ -285,7 +290,31 @@ public class MapleServer {
                 e.printStackTrace();
             }
 
-    }
+        }
+        //모든 맵의 몬스터가 죽었는지 체크
+        private boolean checkAllMapsCleared() {
+            for (Map.Entry<Integer, MonsterManager> entry : mapMonsterManagers.entrySet()) {
+                MonsterManager manager = entry.getValue();
+                boolean isMapClear = true;
+                for (Monster monster : manager.getMonsters()) {
+                    if (monster.isAlive()) {
+                        isMapClear = false;
+                        break;
+                    }
+                }
+                if (!isMapClear) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        //엔딩화면으로 전환
+        private void broadcastGameEnd() {
+            for (ClientHandler client : clients) {
+                client.send("GAME_END");
+            }
+        }
     }
 
     public static void main(String[] args) {

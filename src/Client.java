@@ -6,17 +6,17 @@ import Player.Player1.Player1;
 import Player.Player2.Player2;
 import Player.Skills.Skill;
 import Sound.AudioPlayer;
+import UI.EndingScreen;
 
 
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Client extends JPanel implements ActionListener, KeyListener {
@@ -73,6 +73,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     private boolean isOpponentMessage = false;
     //채팅기능 관련
 
+    //엔딩화면 관련 변수
+    private EndingScreen endingScreen;  // EndingScreen 인스턴스 추가
+    private Map<Integer, MonsterManager> mapMonsterManagers = new HashMap<>();
+    //엔딩화면 관련
 
 
     // 키 입력 상태를 저장하는 Set
@@ -81,9 +85,19 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     // Client.java 내 Player 초기화 코드 수정
     public Client(int playerID, String host, int port) throws IOException {
         this.playerID = playerID;
-        this.monsterManager = new MonsterManager(); //몬스터 매니저 초기화
-        monsterManager.initializeMonsters(currentMapIndex);
+        // 각 맵에 대한 MonsterManager 초기화
+        for (int i = 0; i < maps.size(); i++) {
+            MonsterManager manager = new MonsterManager();
+            manager.initializeMonsters(i);
+            mapMonsterManagers.put(i, manager);
+        }
 
+        //현재 위치한 맵에대한 몬스터 매니저
+        this.monsterManager = mapMonsterManagers.get(currentMapIndex);
+//        monsterManager.initializeMonsters(currentMapIndex);
+
+        // EndingScreen 초기화
+        endingScreen = new EndingScreen(REFERENCE_WIDTH, REFERENCE_HEIGHT);
 
         // 첫 번째 맵 설정
         MapData currentMap = getCurrentMap();
@@ -161,6 +175,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     }
 
 
+    // Client.java의 receiveUpdates() 메서드 수정
     private void receiveUpdates() {
         try {
             while (true) {
@@ -172,9 +187,10 @@ public class Client extends JPanel implements ActionListener, KeyListener {
                     handleMonsterUpdate(message);
                 } else if (message.startsWith("SKILL")) {
                     handleSkillMessage(message);
-                }
-                else if (message.startsWith("CHAT")) {    // 이 부분 추가
-                handleChatMessage(message);             // 이 부분 추가
+                } else if (message.startsWith("CHAT")) {
+                    handleChatMessage(message);
+                } else if (message.equals("GAME_END")) {
+                    endGame();
                 }
             }
         } catch (IOException e) {
@@ -285,6 +301,12 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
+        if (endingScreen.isActive()) {
+            endingScreen.draw(g2d, scaleX, scaleY);
+            return;
+        }
+
+
         // 현재 상태 저장
         AffineTransform originalTransform = g2d.getTransform();
         Composite originalComposite = g2d.getComposite();
@@ -354,19 +376,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 채팅 UI 그리기
         drawChat(g2d);
 
-        // 버튼 그리기
-//        int buttonSpacing = 10;
-//        int buttonWidth = tradeButtonImage.getWidth(null);
-//        int buttonHeight = tradeButtonImage.getHeight(null);
-//        int buttonStartX = REFERENCE_WIDTH - (buttonWidth * 3 + buttonSpacing * 2);
-//        int buttonY = REFERENCE_HEIGHT - stateBarHeight +
-//                (stateBarHeight - buttonHeight) / 2;
-//
-//        g2d.drawImage(tradeButtonImage, buttonStartX, buttonY, this);
-//        g2d.drawImage(shortcutButtonImage,
-//                buttonStartX + buttonWidth + buttonSpacing, buttonY, this);
-//        g2d.drawImage(shopButtonImage,
-//                buttonStartX + 2 * (buttonWidth + buttonSpacing), buttonY, this);
     }
 
 
@@ -376,6 +385,34 @@ public class Client extends JPanel implements ActionListener, KeyListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         int speed = 6;
+
+        if (endingScreen.isActive()) {
+            return;
+        }
+
+        // 모든 맵의 몬스터가 죽었는지 확인
+        boolean allMapsClear = true;
+        for (int i = 0; i < maps.size(); i++) {
+            MonsterManager manager = mapMonsterManagers.get(i);
+            boolean isMapClear = manager.areAllMapMonstersDead(i);
+
+
+            if (!isMapClear) {
+                allMapsClear = false;
+                break;
+            }
+        }
+
+        if (allMapsClear) {
+
+            endGame();
+            return;
+        }
+
+        // 키 상태에 따라 동작 수행
+        if (pressedKeys.contains(KeyEvent.VK_LEFT)) {
+            player1.moveLeft(speed);
+        }
 
         // 키 상태에 따라 동작 수행
         if (pressedKeys.contains(KeyEvent.VK_LEFT)) {
@@ -421,10 +458,47 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         sendPosition();
         repaint();
     }
+    // endGame 메소드 수정
+    private void endGame() {
+        endingScreen.activate();
+        audioPlayer.stop();
 
+        // 서버에 게임 종료 알림
+        try {
+            output.writeUTF("GAME_END," + playerID);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // restartGame 메소드 수정
+    private void restartGame() {
+        endingScreen.deactivate();
+        currentMapIndex = 0;
+
+        // 맵 초기화
+        MapData currentMap = getCurrentMap();
+        baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();
+        backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
+
+        // 플레이어 위치 초기화
+        Rectangle firstGround = currentMap.getTerrain().get(0);
+        player1.setPosition(firstGround.x + 50, firstGround.y - 195);
+
+        // 몬스터 초기화
+        monsterManager.initializeMonsters(currentMapIndex);
+
+        // 배경음악 재생
+        playCurrentMapMusic();
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (endingScreen.isActive() && e.getKeyCode() == KeyEvent.VK_R) {
+            restartGame();
+            return;
+        }
+
         if (isChatting) {
             handleChatKeyPress(e);
         } else {
@@ -526,6 +600,8 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         currentMapIndex = portal.getNextMapIndex();
         MapData currentMap = getCurrentMap();
 
+        monsterManager = mapMonsterManagers.get(currentMapIndex);
+
         baseImage = new ImageIcon(currentMap.getBaseImagePath()).getImage();
         backgroundImage = new ImageIcon(currentMap.getBackgroundImagePath()).getImage();
 
@@ -576,26 +652,19 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     private void checkSkillMonsterCollisions() {
         Skill currentSkill = null;
-
-        // 현재 활성화된 스킬 찾기
-        if (player1.getQSkill().isActive()) {
-            currentSkill = player1.getQSkill();
-        } else if (player1.getWSkill().isActive()) {
-            currentSkill = player1.getWSkill();
-        } else if (player1.getESkill().isActive()) {
-            currentSkill = player1.getESkill();
-        }
+        if (player1.getQSkill().isActive()) currentSkill = player1.getQSkill();
+        else if (player1.getWSkill().isActive()) currentSkill = player1.getWSkill();
+        else if (player1.getESkill().isActive()) currentSkill = player1.getESkill();
 
         if (currentSkill == null || currentSkill.getHitbox() == null) return;
 
-        // 스킬과 몬스터 충돌 체크
         Rectangle skillHitbox = currentSkill.getHitbox();
-        CopyOnWriteArrayList<Monster> monsters = monsterManager.getMonsters();
+        MonsterManager currentManager = mapMonsterManagers.get(currentMapIndex);
+        CopyOnWriteArrayList<Monster> monsters = currentManager.getMonsters();
 
         for (int i = 0; i < monsters.size(); i++) {
             Monster monster = monsters.get(i);
             if (monster.isAlive() && monster.hitbox.intersects(skillHitbox)) {
-                // 서버에 몬스터 피격 정보 전송
                 try {
                     output.writeUTF("HIT_MONSTER," + i + "," + currentSkill.getDamage());
                 } catch (IOException e) {
