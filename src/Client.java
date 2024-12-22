@@ -494,8 +494,9 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (endingScreen.isActive() && e.getKeyCode() == KeyEvent.VK_R) {
-            restartGame();
+        if (endingScreen.isActive() && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            // 게임 종료
+            System.exit(0);  // 프로그램 종료
             return;
         }
 

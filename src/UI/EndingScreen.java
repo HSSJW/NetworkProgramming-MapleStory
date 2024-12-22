@@ -76,7 +76,7 @@ public class EndingScreen {
         // 재시작 안내 메시지
         g2d.setFont(new Font("Arial", Font.BOLD, 30));
         fm = g2d.getFontMetrics();
-        String restartMessage = "Press 'R' to restart";
+        String restartMessage = "Press 'ESC' to EXIT";
         textX = (referenceWidth - fm.stringWidth(restartMessage)) / 2;
         textY += 50;
 
