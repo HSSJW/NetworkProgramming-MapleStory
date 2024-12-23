@@ -117,7 +117,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 지형 초기화
         ground = new CopyOnWriteArrayList<>(currentMap.getTerrain());
 
-// 플레이어 초기화 - 첫 번째 지형(Rectangle) 위에 배치
+        // 플레이어 초기화 - 첫 번째 지형(Rectangle) 위에 배치
         Rectangle firstGround = ground.get(0); // 첫 번째 지형
         int playerStartX = firstGround.x + 50; // 지형의 시작점 + 여유 공간
         int playerStartY = firstGround.y - 195; // 지형 상단 - 플레이어 높이
@@ -125,9 +125,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         if (playerID == 1) {
             player1 = new Player1(playerStartX, playerStartY); // 1번 클라이언트는 Player1
             player2 = new Player2(playerStartX + 100, playerStartY); // 상대방은 Player2
+            player2.moveLeft(0); // 상대방은 왼쪽을 보도록 설정
         } else {
             player1 = new Player2(playerStartX, playerStartY); // 2번 클라이언트는 Player2
             player2 = new Player1(playerStartX + 100, playerStartY); // 상대방은 Player1
+            player1.moveRight(0); // 자신은 오른쪽을 보도록 설정
         }
 
         // 상태바 및 버튼 이미지 로드
@@ -223,6 +225,17 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
             if (id != playerID) {
                 if (player2 != null) {
+                    // 이전 위치와 비교하여 방향 설정
+                    if (x > player2.getX()) {
+                        if (!player2.isFacingRight()) {
+                            player2.moveRight(0); // 방향만 바꾸기 위해 속도 0으로 설정
+                        }
+                    } else if (x < player2.getX()) {
+                        if (player2.isFacingRight()) {
+                            player2.moveLeft(0); // 방향만 바꾸기 위해 속도 0으로 설정
+                        }
+                    }
+
                     player2.setPosition(x, y);
                     player2.setState(state);
                     opponentMapIndex = mapIndex;
@@ -231,7 +244,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
             }
             repaint();
         } catch (Exception e) {
-
             e.printStackTrace();
         }
     }
