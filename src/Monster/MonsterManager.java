@@ -50,7 +50,7 @@ public class MonsterManager {
         List<MonsterSpawnData> map2Monsters = Arrays.asList(
 
                 new MonsterSpawnData(Wolf.class, 550, 450, 1),
-                new MonsterSpawnData(Wolf.class, 100, 450, 1),   // 1층
+                new MonsterSpawnData(Wolf.class, 50, 450, 1),   // 1층
                 new MonsterSpawnData(Wolf.class, 400, 200, 1),
                 new MonsterSpawnData(Wolf.class, 400, 50, 1)
         );
