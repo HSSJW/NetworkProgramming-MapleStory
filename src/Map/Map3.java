@@ -55,7 +55,7 @@ public class Map3 extends MapData {
         // 포탈 데이터 초기화
         this.portals = new CopyOnWriteArrayList<>(
                 java.util.List.of(
-                        new Portal(700, 400, 0, 700, 400)
+                        new Portal(700, 400, 1, 1300, 500)
                 )
         );
     }

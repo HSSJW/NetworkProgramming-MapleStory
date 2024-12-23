@@ -344,11 +344,11 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         g2d.drawImage(backgroundImage, 0, currentMap.getBackgroundYOffset(),
                 REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
 
-        // 지형 그리기
-        g2d.setColor(Color.GREEN);
-        for (Rectangle rect : currentMap.getTerrain()) {
-            g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
-        }
+        //디버깅용 지형 그리기
+//        g2d.setColor(Color.GREEN);
+//        for (Rectangle rect : currentMap.getTerrain()) {
+//            g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
+//        }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {

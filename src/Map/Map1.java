@@ -32,7 +32,7 @@ public class Map1 extends MapData {
         // 포탈 데이터 초기화
         this.portals = new CopyOnWriteArrayList<>(
                 java.util.List.of(
-                        new Portal(1250, 460, 1, 700, 400)
+                        new Portal(1250, 460, 1, 50, 500)
                 )
         );
     }
