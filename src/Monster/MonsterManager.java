@@ -38,7 +38,6 @@ public class MonsterManager {
     private void initializeMapMonsters() {
         mapMonsters = new HashMap<>();
 
-        // Map1 (index 0)의 몬스터 스폰 데이터
         List<MonsterSpawnData> map1Monsters = Arrays.asList(
                 new MonsterSpawnData(MushRoom.class, 200, 535, 0),
                 new MonsterSpawnData(MushRoom.class, 700, 535, 0),
@@ -47,25 +46,23 @@ public class MonsterManager {
         );
         mapMonsters.put(0, map1Monsters);
 
-        // Map2 (index 1)의 몬스터 스폰 데이터 - Map2의 지형에 맞게 조정
+
         List<MonsterSpawnData> map2Monsters = Arrays.asList(
-                new MonsterSpawnData(MushRoom.class, 150, 580, 1),    // 1층
-                new MonsterSpawnData(MushRoom.class, 500, 580, 1),
-                new MonsterSpawnData(MushRoom.class, 1000, 580, 1),
-                new MonsterSpawnData(MushRoom.class, 400, 410, 1),    // 2층
-                new MonsterSpawnData(MushRoom.class, 900, 410, 1),
-                new MonsterSpawnData(MushRoom.class, 300, 230, 1)     // 3층
+
+                new MonsterSpawnData(Wolf.class, 550, 450, 1),
+                new MonsterSpawnData(Wolf.class, 100, 450, 1),   // 1층
+                new MonsterSpawnData(Wolf.class, 400, 200, 1),
+                new MonsterSpawnData(Wolf.class, 400, 50, 1)
         );
         mapMonsters.put(1, map2Monsters);
 
-        // Map3 (index 2)의 몬스터 스폰 데이터 - Map3의 지형에 맞게 조정
+
         List<MonsterSpawnData> map3Monsters = Arrays.asList(
-                new MonsterSpawnData(MushRoom.class, 100, 513, 2),    // 바닥
-                new MonsterSpawnData(MushRoom.class, 500, 513, 2),
-                new MonsterSpawnData(MushRoom.class, 900, 513, 2),
-                new MonsterSpawnData(MushRoom.class, 420, 470, 2),    // 블록 타워
-                new MonsterSpawnData(MushRoom.class, 440, 390, 2),
-                new MonsterSpawnData(MushRoom.class, 480, 310, 2)
+                new MonsterSpawnData(Robot.class, 100, 300, 2),    // 바닥
+                new MonsterSpawnData(Robot.class, 700, 300, 2),
+                new MonsterSpawnData(Robot.class, 900, 300, 2),
+                new MonsterSpawnData(Robot.class, 1000, 300, 2)
+
         );
         mapMonsters.put(2, map3Monsters);
     }
