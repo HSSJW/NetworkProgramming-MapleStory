@@ -24,10 +24,6 @@ public class MapleServer {
     private Timer monsterUpdateTimer;
     private int currentMapIndex = 0;
 
-//    static {
-//        maps = MapData.getMaps();
-//    }
-
     public MapleServer(int port) {
         this.port = port;
 
@@ -154,11 +150,6 @@ public class MapleServer {
         }
     }
 
-//    private String createMonsterStateMessage() {
-//        // 현재 맵의 MonsterManager 사용
-//        MonsterManager currentManager = mapMonsterManagers.get(currentMapIndex);
-//        return createMonsterStateMessage(currentMapIndex, currentManager);
-//    }
 
 
     private void handleMapChange(String data) {

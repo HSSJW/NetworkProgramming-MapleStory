@@ -94,7 +94,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
 
         //현재 위치한 맵에대한 몬스터 매니저
         this.monsterManager = mapMonsterManagers.get(currentMapIndex);
-//        monsterManager.initializeMonsters(currentMapIndex);
 
         // EndingScreen 초기화
         endingScreen = new EndingScreen(REFERENCE_WIDTH, REFERENCE_HEIGHT);
@@ -129,7 +128,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         } else {
             player1 = new Player2(playerStartX, playerStartY); // 2번 클라이언트는 Player2
             player2 = new Player1(playerStartX + 100, playerStartY); // 상대방은 Player1
-            player1.moveRight(0); // 자신은 오른쪽을 보도록 설정
+            player1.moveRight(0);
         }
 
         // 상태바 및 버튼 이미지 로드
@@ -149,7 +148,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         int newWidth = (int)(newHeight * ratio) + 700;  // 기존 비율에서 100픽셀 추가
         chatBoxImage = chatBoxImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
 
-// 채팅창 위치 조정 (상태바 바로 위에 위치)
+
         chatBoxBounds = new Rectangle(
                 0,
                 REFERENCE_HEIGHT - stateBarImage.getHeight(null) - newHeight - 40,
@@ -344,11 +343,6 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         g2d.drawImage(backgroundImage, 0, currentMap.getBackgroundYOffset(),
                 REFERENCE_WIDTH, REFERENCE_HEIGHT, this);
 
-        //디버깅용 지형 그리기
-//        g2d.setColor(Color.GREEN);
-//        for (Rectangle rect : currentMap.getTerrain()) {
-//            g2d.fillRect(rect.x, rect.y, rect.width, rect.height);
-//        }
 
         // 포탈 그리기
         for (Portal portal : currentMap.getPortals()) {
@@ -621,8 +615,7 @@ public class Client extends JPanel implements ActionListener, KeyListener {
         // 플레이어 위치 초기화
         player1.setPosition(portal.getSpawnX(), portal.getSpawnY());
 
-        // 상대방도 같은 맵으로 업데이트
-//        opponentMapIndex = currentMapIndex;
+
 
         // 새로운 배경음악 재생
         playCurrentMapMusic();

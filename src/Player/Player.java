@@ -147,10 +147,9 @@ public abstract class Player {
     }
 
     public void stopMoving() {
-//        if (onGround && !moving && !currentState.equals("jump")) { // 점프 중이 아니면 idle 상태로 전환
         currentState = "idle";
         currentImage = facingRight ? standRightImage : standLeftImage; // 방향에 따른 서 있는 이미지
-//        }
+
     }
 
     public void update(MapData currentMap, int mapWidth, int mapHeight) {
@@ -160,8 +159,6 @@ public abstract class Player {
         if(verticalSpeed <= 25)  //지형 뚫고 내려가는 것을 방지하기위한 수직가속도 제한 설정
             verticalSpeed += GRAVITY;
 
-
-//        System.out.println(verticalSpeed);
         // 위치 업데이트
         y += verticalSpeed;
 

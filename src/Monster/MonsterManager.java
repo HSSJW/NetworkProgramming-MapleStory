@@ -50,7 +50,7 @@ public class MonsterManager {
         List<MonsterSpawnData> map2Monsters = Arrays.asList(
 
                 new MonsterSpawnData(Wolf.class, 550, 450, 1),
-                new MonsterSpawnData(Wolf.class, 50, 450, 1),   // 1층
+                new MonsterSpawnData(Wolf.class, 50, 450, 1),
                 new MonsterSpawnData(Wolf.class, 400, 200, 1),
                 new MonsterSpawnData(Wolf.class, 400, 50, 1)
         );
@@ -58,7 +58,7 @@ public class MonsterManager {
 
 
         List<MonsterSpawnData> map3Monsters = Arrays.asList(
-                new MonsterSpawnData(Robot.class, 100, 300, 2),    // 바닥
+                new MonsterSpawnData(Robot.class, 100, 300, 2),
                 new MonsterSpawnData(Robot.class, 700, 300, 2),
                 new MonsterSpawnData(Robot.class, 900, 300, 2),
                 new MonsterSpawnData(Robot.class, 1000, 300, 2)
@@ -87,12 +87,9 @@ public class MonsterManager {
 
 
                 } catch (Exception e) {
-                    System.err.println("Error spawning monster: " + e.getMessage());
-                    e.printStackTrace();
+
                 }
             }
-        } else {
-            System.err.println("No spawn data found for map " + mapIndex);
         }
     }
 
