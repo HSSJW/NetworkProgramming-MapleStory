@@ -1,4 +1,6 @@
-# networkProgramming
+# 한성대학교 3학년 2학기 네트워크프로그래밍 텀 프로젝트입니다.
+## MapleStory - 2인용 소켓통신 프로젝트
+
 ```
 MapleStory_Project
 
